@@ -93,7 +93,8 @@ class CaptchaHandler @Inject constructor(
 						notify = request.extras[suppressCaptchaKey] != true,
 					)
 				) {
-					coilProvider.get().enqueue(request) // TODO check if ok
+					// Retry the failed request now that captcha is resolved
+					coilProvider.get().enqueue(request)
 				}
 			}
 		}

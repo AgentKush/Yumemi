@@ -340,7 +340,10 @@ class ReaderViewModel @Inject constructor(
             prevJob?.cancelAndJoin()
             loadingJob?.join()
             if (pages.size != content.value.pages.size) {
-                return@launchJob // TODO
+                // Pages changed during coroutine execution - the position indices are now stale.
+                // A new onCurrentPageChanged call will occur with the updated page list,
+                // so we safely discard this stale update.
+                return@launchJob
             }
             val centerPos = (lowerPos + upperPos) / 2
             pages.getOrNull(centerPos)?.let { page ->

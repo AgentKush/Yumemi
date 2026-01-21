@@ -640,13 +640,42 @@ class AppRouter private constructor(
             .startChooser()
     }
 
-    private fun shareFile(file: File) { // TODO directory sharing support
+    private fun shareFile(file: File) {
         val context = contextOrNull() ?: return
+        if (file.isDirectory) {
+            shareDirectory(file, context)
+        } else {
+            shareSingleFile(file, context)
+        }
+    }
+
+    private fun shareSingleFile(file: File, context: Context) {
+        val mimeType = when {
+            file.extension.equals("cbz", ignoreCase = true) -> TYPE_CBZ
+            file.extension.equals("cbr", ignoreCase = true) -> TYPE_CBR
+            file.extension.equals("zip", ignoreCase = true) -> TYPE_ZIP
+            else -> TYPE_OCTET_STREAM
+        }
         val intentBuilder = ShareCompat.IntentBuilder(context)
-            .setType(TYPE_CBZ)
+            .setType(mimeType)
         val uri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.files", file)
         intentBuilder.addStream(uri)
         intentBuilder.setChooserTitle(context.getString(R.string.share_s, file.name))
+        intentBuilder.startChooser()
+    }
+
+    private fun shareDirectory(directory: File, context: Context) {
+        val files = directory.listFiles { f -> f.isFile && !f.isHidden }
+        if (files.isNullOrEmpty()) {
+            return
+        }
+        val intentBuilder = ShareCompat.IntentBuilder(context)
+            .setType(TYPE_IMAGE)
+        for (file in files) {
+            val uri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.files", file)
+            intentBuilder.addStream(uri)
+        }
+        intentBuilder.setChooserTitle(context.getString(R.string.share_s, directory.name))
         intentBuilder.startChooser()
     }
 
@@ -854,6 +883,9 @@ class AppRouter private constructor(
         private const val TYPE_TEXT = "text/plain"
         private const val TYPE_IMAGE = "image/*"
         private const val TYPE_CBZ = "application/x-cbz"
+        private const val TYPE_CBR = "application/x-cbr"
+        private const val TYPE_ZIP = "application/zip"
+        private const val TYPE_OCTET_STREAM = "application/octet-stream"
 
         private fun Class<out Fragment>.fragmentTag() = name
 

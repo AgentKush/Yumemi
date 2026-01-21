@@ -13,6 +13,7 @@ import okhttp3.Response
 import okhttp3.Route
 import okio.IOException
 import org.koitharu.kotatsu.core.exceptions.ProxyConfigException
+import org.koitharu.kotatsu.core.exceptions.ProxyWebViewUnsupportedException
 import org.koitharu.kotatsu.core.network.CommonHeaders
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.util.ext.printStackTraceDebug
@@ -56,7 +57,7 @@ class ProxyProvider @Inject constructor(
 		val isProxyEnabled = isProxyEnabled()
 		if (!WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
 			if (isProxyEnabled) {
-				throw IllegalArgumentException("Proxy for WebView is not supported") // TODO localize
+				throw ProxyWebViewUnsupportedException()
 			}
 		} else {
 			val controller = ProxyController.getInstance()

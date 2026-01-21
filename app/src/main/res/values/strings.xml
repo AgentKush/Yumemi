@@ -416,6 +416,7 @@
     <string name="address">Address</string>
     <string name="port">Port</string>
     <string name="proxy">Proxy</string>
+    <string name="proxy_webview_not_supported">Proxy for WebView is not supported on this device</string>
     <string name="invalid_value_message">Invalid value</string>
     <string name="kitsu" translatable="false">Kitsu</string>
     <string name="email_password_enter_hint">Enter your email and password to continue</string>

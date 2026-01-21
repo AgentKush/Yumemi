@@ -3,6 +3,8 @@ package org.koitharu.kotatsu.reader.domain
 import android.content.Context
 import android.graphics.Rect
 import android.net.Uri
+import android.net.NetworkCapabilities
+import android.os.Build
 import androidx.annotation.AnyThread
 import androidx.annotation.CheckResult
 import androidx.collection.LongSparseArray
@@ -49,6 +51,7 @@ import org.koitharu.kotatsu.core.util.MimeTypes
 import org.koitharu.kotatsu.core.util.ext.URI_SCHEME_ZIP
 import org.koitharu.kotatsu.core.util.ext.cancelChildrenAndJoin
 import org.koitharu.kotatsu.core.util.ext.compressToPNG
+import org.koitharu.kotatsu.core.util.ext.connectivityManager
 import org.koitharu.kotatsu.core.util.ext.ensureRamAtLeast
 import org.koitharu.kotatsu.core.util.ext.ensureSuccess
 import org.koitharu.kotatsu.core.util.ext.getCompletionResultOrNull
@@ -104,7 +107,8 @@ class PageLoader @Inject constructor(
 	private var repository: MangaRepository? = null
 	private val prefetchQueue = LinkedList<MangaPage>()
 	private val counter = AtomicInteger(0)
-	private var prefetchQueueLimit = PREFETCH_LIMIT_DEFAULT // TODO adaptive
+	private val prefetchQueueLimit: Int
+		get() = computeAdaptivePrefetchLimit()
 	private val edgeDetector = EdgeDetector(context)
 
 	fun isPrefetchApplicable(): Boolean {
@@ -312,6 +316,40 @@ class PageLoader @Inject constructor(
 		return context.ramAvailable <= FileSize.MEGABYTES.convert(PREFETCH_MIN_RAM_MB, FileSize.BYTES)
 	}
 
+	/**
+	 * Computes adaptive prefetch queue limit based on:
+	 * - Available RAM: More RAM = larger queue
+	 * - Network type: Unmetered (WiFi) = larger queue, metered (cellular) = smaller queue
+	 * - Power save mode: Reduced prefetch when active
+	 */
+	private fun computeAdaptivePrefetchLimit(): Int {
+		// Base limit from RAM availability
+		val ramBytes = context.ramAvailable
+		val ramBasedLimit = when {
+			ramBytes >= FileSize.MEGABYTES.convert(512, FileSize.BYTES) -> PREFETCH_LIMIT_HIGH
+			ramBytes >= FileSize.MEGABYTES.convert(256, FileSize.BYTES) -> PREFETCH_LIMIT_DEFAULT
+			ramBytes >= FileSize.MEGABYTES.convert(128, FileSize.BYTES) -> PREFETCH_LIMIT_LOW
+			else -> PREFETCH_LIMIT_MINIMUM
+		}
+
+		// Adjust based on network conditions
+		val networkMultiplier = if (isNetworkUnmetered()) 1.0f else 0.5f
+
+		// Adjust for power save mode
+		val powerMultiplier = if (context.isPowerSaveMode()) 0.5f else 1.0f
+
+		return (ramBasedLimit * networkMultiplier * powerMultiplier)
+			.toInt()
+			.coerceIn(PREFETCH_LIMIT_MINIMUM, PREFETCH_LIMIT_HIGH)
+	}
+
+	private fun isNetworkUnmetered(): Boolean {
+		val cm = context.connectivityManager
+		val network = cm.activeNetwork ?: return false
+		val capabilities = cm.getNetworkCapabilities(network) ?: return false
+		return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+	}
+
 	private fun Image.toImageSource(): ImageSource = if (this is BitmapImage) {
 		ImageSource.cachedBitmap(toBitmap())
 	} else {
@@ -335,7 +373,10 @@ class PageLoader @Inject constructor(
 	companion object {
 
 		private const val PROGRESS_UNDEFINED = -1f
+		private const val PREFETCH_LIMIT_MINIMUM = 2
+		private const val PREFETCH_LIMIT_LOW = 4
 		private const val PREFETCH_LIMIT_DEFAULT = 6
+		private const val PREFETCH_LIMIT_HIGH = 10
 		private const val PREFETCH_MIN_RAM_MB = 80L
 
 		fun createPageRequest(pageUrl: String, mangaSource: MangaSource) = Request.Builder()

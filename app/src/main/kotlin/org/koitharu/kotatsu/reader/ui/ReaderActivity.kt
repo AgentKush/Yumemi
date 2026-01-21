@@ -83,7 +83,8 @@ class ReaderActivity :
     IdlingDetector.Callback,
     ZoomControl.ZoomControlListener,
     View.OnClickListener,
-    ScrollTimerControlView.OnVisibilityChangeListener {
+    ScrollTimerControlView.OnVisibilityChangeListener,
+    ReaderMenuProvider.Callback {
 
     @Inject
     lateinit var settings: AppSettings
@@ -194,7 +195,7 @@ class ReaderActivity :
         viewModel.isZoomControlsEnabled.observe(this) {
             viewBinding.zoomControl.isVisible = it
         }
-        addMenuProvider(ReaderMenuProvider(viewModel))
+        addMenuProvider(ReaderMenuProvider(viewModel, this))
 
         observeWindowLayout()
 
@@ -205,6 +206,11 @@ class ReaderActivity :
     override fun getParentActivityIntent(): Intent? {
         val manga = viewModel.getMangaOrNull() ?: return null
         return AppRouter.detailsIntent(this, manga)
+    }
+
+    override fun onOpenMangaInfo() {
+        val manga = viewModel.getMangaOrNull() ?: return
+        router.openDetails(manga)
     }
 
     override fun onUserInteraction() {

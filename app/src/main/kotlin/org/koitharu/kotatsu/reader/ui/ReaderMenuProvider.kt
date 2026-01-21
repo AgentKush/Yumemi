@@ -8,7 +8,12 @@ import org.koitharu.kotatsu.R
 
 class ReaderMenuProvider(
 	private val viewModel: ReaderViewModel,
+	private val callback: Callback? = null,
 ) : MenuProvider {
+
+	interface Callback {
+		fun onOpenMangaInfo()
+	}
 
 	override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
 		menuInflater.inflate(R.menu.opt_reader, menu)
@@ -17,7 +22,7 @@ class ReaderMenuProvider(
 	override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
 		return when (menuItem.itemId) {
 			R.id.action_info -> {
-				// TODO
+				callback?.onOpenMangaInfo()
 				true
 			}
 

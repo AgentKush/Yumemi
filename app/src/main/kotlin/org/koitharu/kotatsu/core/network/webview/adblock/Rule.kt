@@ -43,14 +43,27 @@ sealed interface Rule {
 			if (baseUrl == null) {
 				return true
 			}
+
+			val baseDomain = baseUrl.topPrivateDomain() ?: baseUrl.host
+
+			// Check domain restrictions
+			if (domains != null && baseDomain !in domains) {
+				return false
+			}
+			if (domainsNot != null && baseDomain in domainsNot) {
+				return false
+			}
+
+			// Check third-party modifier
 			thirdParty?.let {
 				val isThirdPartyRequest =
-					(url.topPrivateDomain() ?: url.host) != (baseUrl.topPrivateDomain() ?: baseUrl.host)
+					(url.topPrivateDomain() ?: url.host) != baseDomain
 				if (isThirdPartyRequest != it) {
 					return false
 				}
 			}
-			// TODO check other modifiers
+
+			// Note: script modifier is not checked here as we don't have resource type info
 			return true
 		}
 	}

@@ -57,6 +57,39 @@ class AdBlock @Inject constructor(
 		} ?: true
 	}
 
+	/**
+	 * Returns JavaScript code to inject into WebView for hiding ad elements.
+	 * Should be called after page load via WebView.evaluateJavascript().
+	 * Returns null if adblock is disabled or no CSS rules are available.
+	 */
+	@WorkerThread
+	fun getElementHidingScript(): String? {
+		if (!settings.isAdBlockEnabled) {
+			return null
+		}
+		val rulesList = synchronized(this) {
+			rules ?: parseRules().also { rules = it }
+		} ?: return null
+
+		val selectors = rulesList.elementHidingSelectors
+		if (selectors.isEmpty()) {
+			return null
+		}
+
+		// Build CSS rule to hide all matching elements
+		val cssRule = selectors.joinToString(",") { it.replace("'", "\\'") }
+		return buildString {
+			append("(function(){")
+			append("var style=document.createElement('style');")
+			append("style.type='text/css';")
+			append("style.appendChild(document.createTextNode('")
+			append(cssRule)
+			append("{display:none!important}'));")
+			append("document.head.appendChild(style);")
+			append("})();")
+		}
+	}
+
 	@WorkerThread
 	private fun parseRules() = runCatchingCancellable {
 		listFile(context).useLines { lines ->

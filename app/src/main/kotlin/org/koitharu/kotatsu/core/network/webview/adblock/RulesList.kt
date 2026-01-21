@@ -12,6 +12,14 @@ class RulesList {
 
 	private val blockRules = ArrayList<Rule>()
 	private val allowRules = ArrayList<Rule>()
+	private val cssSelectors = ArrayList<String>()
+
+	/**
+	 * CSS selectors to inject for element hiding.
+	 * These should be applied via WebView's evaluateJavascript after page load.
+	 */
+	val elementHidingSelectors: List<String>
+		get() = cssSelectors
 
 	operator fun get(url: HttpUrl, baseUrl: HttpUrl?): Rule? {
 		val rule = blockRules.find { x -> x(url, baseUrl) }
@@ -26,6 +34,7 @@ class RulesList {
 	fun trimToSize() {
 		blockRules.trimToSize()
 		allowRules.trimToSize()
+		cssSelectors.trimToSize()
 	}
 
 	private fun String.addImpl(isWhitelist: Boolean, modifiers: String?) {
@@ -53,7 +62,11 @@ class RulesList {
 			}
 
 			startsWith("##") -> {
-				// TODO css rules
+				// CSS element hiding selector (generic, applies to all domains)
+				val selector = substring(2).trim()
+				if (selector.isNotEmpty()) {
+					cssSelectors += selector
+				}
 			}
 
 			else -> {
@@ -73,19 +86,41 @@ class RulesList {
 		}
 		var script: Boolean? = null
 		var thirdParty: Boolean? = null
-		options.split(',').forEach {
-			val isNot = it.startsWith('~')
-			when (it.removePrefix("~")) {
-				"script" -> script = !isNot
-				"third-party" -> thirdParty = !isNot
+		var domains: MutableSet<String>? = null
+		var domainsNot: MutableSet<String>? = null
+
+		options.split(',').forEach { option ->
+			val isNot = option.startsWith('~')
+			val optionName = option.removePrefix("~")
+
+			when {
+				optionName == "script" -> script = !isNot
+				optionName == "third-party" -> thirdParty = !isNot
+				optionName.startsWith("domain=") -> {
+					// Parse domain restriction: domain=example.com|~exclude.com
+					val domainList = optionName.removePrefix("domain=").split('|')
+					domainList.forEach { domain ->
+						val isDomainNot = domain.startsWith('~')
+						val domainName = domain.removePrefix("~").lowercase()
+						if (domainName.isNotEmpty()) {
+							if (isDomainNot) {
+								if (domainsNot == null) domainsNot = mutableSetOf()
+								domainsNot?.add(domainName)
+							} else {
+								if (domains == null) domains = mutableSetOf()
+								domains?.add(domainName)
+							}
+						}
+					}
+				}
 			}
 		}
 		return Rule.WithModifiers(
 			baseRule = this,
 			script = script,
 			thirdParty = thirdParty,
-			domains = null, //TODO
-			domainsNot = null, //TODO
+			domains = domains,
+			domainsNot = domainsNot,
 		)
 	}
 }

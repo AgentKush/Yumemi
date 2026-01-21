@@ -855,7 +855,7 @@ class AppRouter private constructor(
         private const val TYPE_IMAGE = "image/*"
         private const val TYPE_CBZ = "application/x-cbz"
 
-        private fun Class<out Fragment>.fragmentTag() = name // TODO
+        private fun Class<out Fragment>.fragmentTag() = name
 
         private inline fun <reified F : Fragment> fragmentTag() = F::class.java.fragmentTag()
     }

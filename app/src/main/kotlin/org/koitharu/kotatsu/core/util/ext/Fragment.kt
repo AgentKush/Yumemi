@@ -34,5 +34,5 @@ tailrec fun <T> Fragment.findParentCallback(cls: Class<T>): T? {
 
 val Fragment.container: FragmentContainerView?
 	get() = view?.ancestors?.firstNotNullOfOrNull {
-		it as? FragmentContainerView // TODO check if direct parent
+		it as? FragmentContainerView // Returns first ancestor, not necessarily direct parent
 	}

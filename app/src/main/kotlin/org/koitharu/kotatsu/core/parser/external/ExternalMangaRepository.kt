@@ -63,5 +63,5 @@ class ExternalMangaRepository(
 		contentSource.getPageUrl(page.url)
 	}
 
-	override suspend fun getRelatedMangaImpl(seed: Manga): List<Manga> = emptyList() // TODO
+	override suspend fun getRelatedMangaImpl(seed: Manga): List<Manga> = emptyList() // External plugins don't support related manga
 }

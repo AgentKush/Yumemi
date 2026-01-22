@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.history.data
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import org.koitharu.kotatsu.core.db.TABLE_HISTORY
 import org.koitharu.kotatsu.core.db.entity.MangaEntity
@@ -16,6 +17,13 @@ import org.koitharu.kotatsu.core.db.entity.MangaEntity
 			childColumns = ["manga_id"],
 			onDelete = ForeignKey.CASCADE,
 		),
+	],
+	indices = [
+		Index(value = ["deleted_at"]),
+		Index(value = ["updated_at"]),
+		Index(value = ["created_at"]),
+		Index(value = ["percent"]),
+		Index(value = ["deleted_at", "updated_at"]),
 	],
 )
 data class HistoryEntity(

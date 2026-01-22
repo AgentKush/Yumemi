@@ -56,12 +56,13 @@ android {
 			minifyEnabled true
 			shrinkResources true
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-//			signingConfig signingConfigs.Yukimi
+			// Use debug signing for testing - replace with proper keystore for production
+			signingConfig signingConfigs.debug
 		}
 		nightly {
 			initWith release
 			applicationIdSuffix = '.nightly'
-//			signingConfig signingConfigs.Yukimi
+			signingConfig signingConfigs.debug
 		}
 	}
 	buildFeatures {

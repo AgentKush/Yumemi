@@ -45,8 +45,14 @@ class VersionIdTest {
 
 	@Test
 	fun testCurrentVersion() {
+		val currentVersion = VersionId(BuildConfig.VERSION_NAME)
+		// Skip comparison for nightly builds since they use date-based versioning
+		if (currentVersion.variantType == "n") {
+			// Just verify nightly version was parsed correctly
+			assertTrue(currentVersion.build > 0)
+			return
+		}
 		val version1 = VersionId("2.4.6")
-		val version2 = VersionId(BuildConfig.VERSION_NAME)
-		assertTrue(version1 < version2)
+		assertTrue(version1 < currentVersion)
 	}
 }

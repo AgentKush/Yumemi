@@ -29,8 +29,7 @@ import org.koitharu.kotatsu.parsers.model.MangaSource
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.util.findById
 import org.koitharu.kotatsu.parsers.util.levenshteinDistance
-import org.koitharu.kotatsu.scrobbling.common.domain.Scrobbler
-import org.koitharu.kotatsu.scrobbling.common.domain.tryScrobble
+import org.koitharu.kotatsu.scrobbling.common.domain.ScrobblingManager
 import org.koitharu.kotatsu.search.domain.SearchKind
 import org.koitharu.kotatsu.tracker.domain.CheckNewChaptersUseCase
 import javax.inject.Inject
@@ -40,7 +39,7 @@ import javax.inject.Provider
 class HistoryRepository @Inject constructor(
 	private val db: MangaDatabase,
 	private val settings: AppSettings,
-	private val scrobblers: Set<@JvmSuppressWildcards Scrobbler>,
+	private val scrobblingManager: ScrobblingManager,
 	private val mangaRepository: MangaDataRepository,
 	private val localObserver: HistoryLocalObserver,
 	private val newChaptersUseCaseProvider: Provider<CheckNewChaptersUseCase>,
@@ -132,7 +131,7 @@ class HistoryRepository @Inject constructor(
 				),
 			)
 			newChaptersUseCaseProvider.get()(manga, chapterId)
-			scrobblers.forEach { it.tryScrobble(manga, chapterId) }
+			scrobblingManager.scrobble(manga, chapterId)
 		}
 	}
 

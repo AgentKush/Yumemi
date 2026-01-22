@@ -84,17 +84,24 @@ class CaptchaHandler @Inject constructor(
 		super.onError(request, result)
 		val e = result.throwable
 		if (e is CloudFlareException) {
-			val scope = request.lifecycle?.coroutineScope ?: processLifecycleScope
+			val lifecycle = request.lifecycle
+			val scope = lifecycle?.coroutineScope ?: processLifecycleScope
+			// Extract request data to avoid holding reference to potentially destroyed context
+			val requestData = request.data
+			val suppressCaptcha = request.extras[suppressCaptchaKey]
 			scope.launch {
 				if (
 					handleException(
 						source = e.source,
 						exception = e,
-						notify = request.extras[suppressCaptchaKey] != true,
+						notify = suppressCaptcha != true,
 					)
 				) {
-					// Retry the failed request now that captcha is resolved
-					coilProvider.get().enqueue(request)
+					// Rebuild the request with application context to avoid leaking Activity
+					val newRequest = ImageRequest.Builder(context)
+						.data(requestData)
+						.build()
+					coilProvider.get().enqueue(newRequest)
 				}
 			}
 		}

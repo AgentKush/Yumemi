@@ -23,8 +23,8 @@ import org.koitharu.kotatsu.core.db.entity.ChapterEntity
 import org.koitharu.kotatsu.core.db.entity.MangaEntity
 import org.koitharu.kotatsu.core.db.entity.MangaPrefsEntity
 import org.koitharu.kotatsu.core.db.entity.MangaSourceEntity
-import org.koitharu.kotatsu.core.db.entity.MangaTagsEntity
 import org.koitharu.kotatsu.core.db.entity.SourceHealthEntity
+import org.koitharu.kotatsu.core.db.entity.MangaTagsEntity
 import org.koitharu.kotatsu.core.db.entity.TagEntity
 import org.koitharu.kotatsu.core.db.migrations.Migration10To11
 import org.koitharu.kotatsu.core.db.migrations.Migration11To12
@@ -156,6 +156,7 @@ fun MangaDatabase(context: Context): MangaDatabase = Room
 	.databaseBuilder(context, MangaDatabase::class.java, "kotatsu-db")
 	.addMigrations(*getDatabaseMigrations(context))
 	.addCallback(DatabasePrePopulateCallback(context.resources))
+	.fallbackToDestructiveMigration(dropAllTables = true)
 	.build()
 
 fun InvalidationTracker.removeObserverAsync(observer: InvalidationTracker.Observer) {

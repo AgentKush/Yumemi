@@ -307,6 +307,14 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val cacheRelatedTtlMinutes: Int
 		get() = prefs.getInt(KEY_CACHE_RELATED_TTL, DEFAULT_CACHE_RELATED_TTL).coerceIn(1, 120)
 
+	/**
+	 * Maximum number of parallel chapter checks during tracker updates.
+	 * Higher values = faster checking but more network load.
+	 * Default: 6, Range: 1-12
+	 */
+	val trackerParallelism: Int
+		get() = prefs.getInt(KEY_TRACKER_PARALLELISM, DEFAULT_TRACKER_PARALLELISM).coerceIn(1, 12)
+
 	val isExitConfirmationEnabled: Boolean
 		get() = prefs.getBoolean(KEY_EXIT_CONFIRM, false)
 
@@ -802,6 +810,7 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_CACHE_DETAILS_TTL = "cache_details_ttl"
 		const val KEY_CACHE_PAGES_TTL = "cache_pages_ttl"
 		const val KEY_CACHE_RELATED_TTL = "cache_related_ttl"
+		const val KEY_TRACKER_PARALLELISM = "tracker_parallelism"
 		const val KEY_PROXY = "proxy"
 		const val KEY_PROXY_TYPE = "proxy_type_2"
 		const val KEY_PROXY_ADDRESS = "proxy_address"
@@ -875,5 +884,8 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val DEFAULT_CACHE_DETAILS_TTL = 5
 		const val DEFAULT_CACHE_PAGES_TTL = 10
 		const val DEFAULT_CACHE_RELATED_TTL = 10
+
+		// tracker defaults
+		const val DEFAULT_TRACKER_PARALLELISM = 6
 	}
 }

@@ -32,12 +32,8 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import org.koitharu.kotatsu.BuildConfig
 import org.koitharu.kotatsu.R
@@ -119,28 +115,12 @@ class TrackWorker @AssistedInject constructor(
 
 	@CheckResult
 	private suspend fun checkUpdatesAsync(tracks: List<MangaTracking>) {
-		val semaphore = Semaphore(MAX_PARALLELISM)
+		val parallelism = settings.trackerParallelism
 		val groupNotifications = mutableListOf<NotificationInfo>()
 
 		try {
-			channelFlow {
-				for (track in tracks) {
-					launch {
-						semaphore.withPermit {
-							send(
-								runCatchingCancellable {
-									checkNewChaptersUseCase.invoke(track)
-								}.getOrElse { error ->
-									MangaUpdates.Failure(
-										manga = track.manga,
-										error = error,
-									)
-								},
-							)
-						}
-					}
-				}
-			}.onEachIndexed { index, it ->
+			checkNewChaptersUseCase.checkBatch(tracks, parallelism)
+				.onEachIndexed { index, it ->
 				if (applicationContext.checkNotificationPermission(WORKER_CHANNEL_ID)) {
 					notificationManager.notify(
 						WORKER_NOTIFICATION_ID,
@@ -365,7 +345,6 @@ class TrackWorker @AssistedInject constructor(
 		const val WORKER_NOTIFICATION_ID = 35
 		const val TAG = "tracking"
 		const val TAG_ONESHOT = "tracking_oneshot"
-		const val MAX_PARALLELISM = 6
 		val BATCH_SIZE = if (BuildConfig.DEBUG) 20 else 46
 		const val SETTINGS_ACTION_CODE = 5
 	}

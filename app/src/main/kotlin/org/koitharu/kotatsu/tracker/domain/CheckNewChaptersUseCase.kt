@@ -2,6 +2,11 @@ package org.koitharu.kotatsu.tracker.domain
 
 import android.util.Log
 import coil3.request.CachePolicy
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.koitharu.kotatsu.BuildConfig
 import org.koitharu.kotatsu.core.model.getPreferredBranch
 import org.koitharu.kotatsu.core.model.isLocal
@@ -42,6 +47,37 @@ class CheckNewChaptersUseCase @Inject constructor(
 
 	suspend operator fun invoke(track: MangaTracking): MangaUpdates = mutex.withLock(track.manga.id) {
 		invokeImpl(track)
+	}
+
+	/**
+	 * Check multiple tracks in parallel with configurable parallelism.
+	 *
+	 * @param tracks List of manga tracks to check
+	 * @param parallelism Maximum number of concurrent checks (default: 6)
+	 * @return Flow emitting MangaUpdates for each track as they complete
+	 */
+	fun checkBatch(
+		tracks: List<MangaTracking>,
+		parallelism: Int = DEFAULT_PARALLELISM,
+	): Flow<MangaUpdates> = channelFlow {
+		val semaphore = Semaphore(parallelism.coerceIn(1, MAX_PARALLELISM))
+		for (track in tracks) {
+			launch {
+				semaphore.withPermit {
+					val result = runCatchingCancellable {
+						mutex.withLock(track.manga.id) {
+							invokeImpl(track)
+						}
+					}.getOrElse { error ->
+						MangaUpdates.Failure(
+							manga = track.manga,
+							error = error,
+						)
+					}
+					send(result)
+				}
+			}
+		}
 	}
 
 	suspend operator fun invoke(manga: Manga, currentChapterId: Long) = mutex.withLock(manga.id) {
@@ -148,5 +184,10 @@ class CheckNewChaptersUseCase @Inject constructor(
 				MangaUpdates.Success(manga, branch, newChapters, isValid = true)
 			}
 		}
+	}
+
+	companion object {
+		const val DEFAULT_PARALLELISM = 6
+		const val MAX_PARALLELISM = 12
 	}
 }

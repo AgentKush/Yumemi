@@ -17,16 +17,30 @@ abstract class SourceHealthDao {
 	@Query("SELECT * FROM source_health WHERE source = :source")
 	abstract fun observe(source: String): Flow<SourceHealthEntity?>
 
-	@Query("SELECT * FROM source_health ORDER BY (success_count + failure_count) DESC")
+	@Query("SELECT * FROM source_health ORDER BY (CAST(success_count AS REAL) / NULLIF(success_count + failure_count, 0)) DESC")
 	abstract suspend fun getAll(): List<SourceHealthEntity>
 
-	@Query("SELECT * FROM source_health ORDER BY (success_count + failure_count) DESC")
+	@Query("SELECT * FROM source_health ORDER BY (CAST(success_count AS REAL) / NULLIF(success_count + failure_count, 0)) DESC")
 	abstract fun observeAll(): Flow<List<SourceHealthEntity>>
 
-	@Query("SELECT * FROM source_health WHERE (CAST(success_count AS REAL) / (success_count + failure_count)) * 100 >= :minSuccessRate ORDER BY avg_response_time ASC")
-	abstract suspend fun getHealthySources(minSuccessRate: Float = 80f): List<SourceHealthEntity>
+	@Query("SELECT * FROM source_health WHERE source IN (:sources)")
+	abstract suspend fun getForSources(sources: List<String>): List<SourceHealthEntity>
+
+	@Query("SELECT * FROM source_health ORDER BY avg_response_time ASC LIMIT :limit")
+	abstract suspend fun getFastestSources(limit: Int): List<SourceHealthEntity>
 
 	@Query("SELECT * FROM source_health WHERE consecutive_failures >= :threshold")
+	abstract suspend fun getUnhealthySources(threshold: Int = 3): List<SourceHealthEntity>
+
+	@Query("""
+		SELECT * FROM source_health 
+		WHERE (success_count + failure_count) > 0 
+		AND (CAST(success_count AS REAL) * 100.0 / (success_count + failure_count)) >= :minSuccessRate
+		ORDER BY (CAST(success_count AS REAL) / (success_count + failure_count)) DESC
+	""")
+	abstract suspend fun getHealthySources(minSuccessRate: Float = 80f): List<SourceHealthEntity>
+
+	@Query("SELECT * FROM source_health WHERE consecutive_failures >= :threshold ORDER BY consecutive_failures DESC")
 	abstract suspend fun getFailingSources(threshold: Int = 3): List<SourceHealthEntity>
 
 	@Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -45,7 +59,7 @@ abstract class SourceHealthDao {
 	open suspend fun recordSuccess(source: String, responseTimeMs: Long) {
 		val existing = get(source)
 		val now = System.currentTimeMillis()
-		
+
 		if (existing == null) {
 			upsert(
 				SourceHealthEntity(
@@ -60,14 +74,16 @@ abstract class SourceHealthDao {
 				)
 			)
 		} else {
+			// Calculate rolling average (weighted toward recent)
 			val totalRequests = existing.successCount + existing.failureCount + 1
-			// Exponential moving average for response time (weight recent more heavily)
-			val newAvg = if (existing.avgResponseTime > 0) {
-				((existing.avgResponseTime * 0.7) + (responseTimeMs * 0.3)).toLong()
+			val newAvg = if (totalRequests <= 10) {
+				// Simple average for first 10 requests
+				((existing.avgResponseTime * (totalRequests - 1)) + responseTimeMs) / totalRequests
 			} else {
-				responseTimeMs
+				// Exponential moving average (weight recent more heavily)
+				((existing.avgResponseTime * 9) + responseTimeMs) / 10
 			}
-			
+
 			upsert(
 				existing.copy(
 					successCount = existing.successCount + 1,
@@ -76,6 +92,7 @@ abstract class SourceHealthDao {
 					maxResponseTime = maxOf(existing.maxResponseTime, responseTimeMs),
 					lastSuccessAt = now,
 					consecutiveFailures = 0, // Reset on success
+					lastError = null, // Clear error on success
 				)
 			)
 		}
@@ -89,7 +106,7 @@ abstract class SourceHealthDao {
 		val existing = get(source)
 		val now = System.currentTimeMillis()
 		val truncatedError = errorMessage?.take(200)
-		
+
 		if (existing == null) {
 			upsert(
 				SourceHealthEntity(

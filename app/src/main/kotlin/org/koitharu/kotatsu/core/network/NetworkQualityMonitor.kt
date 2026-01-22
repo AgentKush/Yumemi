@@ -1,5 +1,6 @@
 package org.koitharu.kotatsu.core.network
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -310,7 +311,11 @@ class NetworkQualityMonitor @Inject constructor(
 		return assessCellularByTelephony()
 	}
 
+	@SuppressLint("MissingPermission") // Handled by try-catch
 	private fun assessCellularByTelephony(): NetworkQuality {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+			return NetworkQuality.MODERATE
+		}
 		val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
 			?: return NetworkQuality.MODERATE
 

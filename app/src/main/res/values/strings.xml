@@ -865,6 +865,14 @@
     <string name="adblock_summary">Block advertisement in the built-in browser (beta)</string>
     <string name="collapse_long_description">Collapse long description</string>
     <string name="creating_backup">Creating backup</string>
+    <string name="export_data">Export data</string>
+    <string name="select_all">Select all</string>
+    <string name="deselect_all">Deselect all</string>
+    <string name="export">Export</string>
+    <string name="nothing_selected">Nothing selected</string>
+    <string name="backup_creating_background">Creating backup in background</string>
+    <string name="selective_backup">Selective backup</string>
+    <string name="selective_backup_summary">Export specific data sections</string>
     <string name="share_backup">Share backup</string>
     <string name="reader_multitask">Open reader in a separate task</string>
     <string name="reader_multitask_summary">Allows you to keep multiple readers with different manga open at the same time</string>

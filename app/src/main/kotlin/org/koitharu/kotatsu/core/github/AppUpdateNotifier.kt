@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.core.github
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -34,6 +35,7 @@ class AppUpdateNotifier @Inject constructor(
 	/**
 	 * Show a notification about an available update.
 	 */
+	@SuppressLint("MissingPermission") // Permission is checked in hasNotificationPermission()
 	fun showUpdateNotification(version: AppVersion) {
 		if (!hasNotificationPermission()) {
 			return

@@ -317,6 +317,10 @@
 			android:foregroundServiceType="dataSync"
 			android:label="@string/creating_backup" />
 		<service
+			android:name="org.koitharu.kotatsu.backups.ui.backup.SelectiveBackupService"
+			android:foregroundServiceType="dataSync"
+			android:label="@string/creating_backup" />
+		<service
 			android:name="org.koitharu.kotatsu.backups.ui.restore.RestoreService"
 			android:foregroundServiceType="dataSync"
 			android:label="@string/restoring_backup" />

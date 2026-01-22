@@ -26,6 +26,7 @@ import org.koitharu.kotatsu.BuildConfig
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.alternatives.ui.AlternativesActivity
 import org.koitharu.kotatsu.backups.ui.backup.BackupDialogFragment
+import org.koitharu.kotatsu.backups.ui.backup.SelectiveBackupDialogFragment
 import org.koitharu.kotatsu.backups.ui.restore.RestoreDialogFragment
 import org.koitharu.kotatsu.bookmarks.ui.AllBookmarksActivity
 import org.koitharu.kotatsu.browser.BrowserActivity
@@ -467,6 +468,10 @@ class AppRouter private constructor(
         BackupDialogFragment().withArgs(1) {
             putParcelable(KEY_DATA, destination)
         }.showDistinct()
+    }
+
+    fun showSelectiveBackupDialog() {
+        SelectiveBackupDialogFragment().showDistinct()
     }
 
     fun showImportDialog() {

@@ -445,6 +445,9 @@
 				<action android:name="${applicationId}.action.REPORT_ERROR" />
 			</intent-filter>
 		</receiver>
+		<receiver
+			android:name="org.koitharu.kotatsu.core.github.AppUpdateDismissReceiver"
+			android:exported="false" />
 
 		<meta-data
 			android:name="android.webkit.WebView.EnableSafeBrowsing"

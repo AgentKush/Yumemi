@@ -324,6 +324,35 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val isUnstableUpdatesAllowed: Boolean
 		get() = prefs.getBoolean(KEY_UPDATES_UNSTABLE, false)
 
+	/**
+	 * Enhanced App Update Check settings
+	 */
+	var isAutoUpdateCheckEnabled: Boolean
+		get() = prefs.getBoolean(KEY_AUTO_UPDATE_CHECK, true)
+		set(value) = prefs.edit { putBoolean(KEY_AUTO_UPDATE_CHECK, value) }
+
+	val isUpdateCheckWifiOnly: Boolean
+		get() = prefs.getBoolean(KEY_UPDATE_CHECK_WIFI_ONLY, false)
+
+	val updateCheckIntervalHours: Int
+		get() = prefs.getString(KEY_UPDATE_CHECK_INTERVAL, null)?.toIntOrNull() ?: DEFAULT_UPDATE_CHECK_INTERVAL_HOURS
+
+	var lastUpdateCheckTime: Long
+		get() = prefs.getLong(KEY_LAST_UPDATE_CHECK, 0L)
+		set(value) = prefs.edit { putLong(KEY_LAST_UPDATE_CHECK, value) }
+
+	fun isVersionSkipped(versionName: String): Boolean {
+		return prefs.getString(KEY_SKIPPED_UPDATE_VERSION, null) == versionName
+	}
+
+	fun skipVersion(versionName: String) {
+		prefs.edit { putString(KEY_SKIPPED_UPDATE_VERSION, versionName) }
+	}
+
+	fun clearSkippedVersion() {
+		prefs.edit { remove(KEY_SKIPPED_UPDATE_VERSION) }
+	}
+
 	val isPagesTabEnabled: Boolean
 		get() = prefs.getBoolean(KEY_PAGES_TAB, true)
 
@@ -801,6 +830,11 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_APP_LOCALE = "app_locale"
 		const val KEY_SOURCES_GRID = "sources_grid"
 		const val KEY_UPDATES_UNSTABLE = "updates_unstable"
+		const val KEY_AUTO_UPDATE_CHECK = "auto_update_check"
+		const val KEY_UPDATE_CHECK_WIFI_ONLY = "update_check_wifi_only"
+		const val KEY_UPDATE_CHECK_INTERVAL = "update_check_interval"
+		const val KEY_LAST_UPDATE_CHECK = "last_update_check"
+		const val KEY_SKIPPED_UPDATE_VERSION = "skipped_update_version"
 		const val KEY_TIPS_CLOSED = "tips_closed"
 		const val KEY_SSL_BYPASS = "ssl_bypass"
 		const val KEY_READER_AUTOSCROLL_SPEED = "as_speed"
@@ -887,5 +921,8 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 
 		// tracker defaults
 		const val DEFAULT_TRACKER_PARALLELISM = 6
+
+		// update check defaults
+		const val DEFAULT_UPDATE_CHECK_INTERVAL_HOURS = 24
 	}
 }

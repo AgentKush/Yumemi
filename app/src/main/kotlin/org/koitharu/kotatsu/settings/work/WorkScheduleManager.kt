@@ -1,8 +1,11 @@
 package org.koitharu.kotatsu.settings.work
 
+import android.content.Context
 import android.content.SharedPreferences
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koitharu.kotatsu.core.github.AppUpdateCheckWorker
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.util.ext.processLifecycleScope
 import org.koitharu.kotatsu.suggestions.ui.SuggestionsWorker
@@ -12,6 +15,7 @@ import javax.inject.Singleton
 
 @Singleton
 class WorkScheduleManager @Inject constructor(
+	@ApplicationContext private val context: Context,
 	private val settings: AppSettings,
 	private val suggestionScheduler: SuggestionsWorker.Scheduler,
 	private val trackerScheduler: TrackWorker.Scheduler,
@@ -33,6 +37,12 @@ class WorkScheduleManager @Inject constructor(
 				isEnabled = settings.isSuggestionsEnabled,
 				force = key != AppSettings.KEY_SUGGESTIONS,
 			)
+
+			AppSettings.KEY_AUTO_UPDATE_CHECK,
+			AppSettings.KEY_UPDATE_CHECK_WIFI_ONLY,
+			AppSettings.KEY_UPDATE_CHECK_INTERVAL -> {
+				AppUpdateCheckWorker.schedule(context, settings)
+			}
 		}
 	}
 
@@ -41,6 +51,8 @@ class WorkScheduleManager @Inject constructor(
 		processLifecycleScope.launch(Dispatchers.Default) {
 			updateWorkerImpl(trackerScheduler, settings.isTrackerEnabled, true) // always force due to adaptive interval
 			updateWorkerImpl(suggestionScheduler, settings.isSuggestionsEnabled, false)
+			// Schedule app update checks
+			AppUpdateCheckWorker.schedule(context, settings)
 		}
 	}
 

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.github.AppUpdateRepository
+import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.ui.BaseViewModel
 import org.koitharu.kotatsu.core.util.ext.MutableEventFlow
 import org.koitharu.kotatsu.core.util.ext.call
@@ -23,6 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AppUpdateViewModel @Inject constructor(
 	private val repository: AppUpdateRepository,
+	private val settings: AppSettings,
 	@ApplicationContext context: Context,
 ) : BaseViewModel() {
 
@@ -73,6 +75,16 @@ class AppUpdateViewModel @Inject constructor(
 			installerIntent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
 			installIntent.value = installerIntent
 			onDownloadDone.call(installerIntent)
+		}
+	}
+
+	/**
+	 * Skip the current available update version.
+	 * The user won't be notified about this version again.
+	 */
+	fun skipCurrentVersion() {
+		nextVersion.value?.let { version ->
+			settings.skipVersion(version.name)
 		}
 	}
 

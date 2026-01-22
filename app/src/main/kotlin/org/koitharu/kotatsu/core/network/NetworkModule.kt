@@ -93,9 +93,11 @@ interface NetworkModule {
 		fun provideMangaHttpClient(
 			@BaseHttpClient baseClient: OkHttpClient,
 			commonHeadersInterceptor: CommonHeadersInterceptor,
+			bandwidthTrackingInterceptor: BandwidthTrackingInterceptor,
 		): OkHttpClient = baseClient.newBuilder().apply {
 			addNetworkInterceptor(CacheLimitInterceptor())
 			addInterceptor(commonHeadersInterceptor)
+			addNetworkInterceptor(bandwidthTrackingInterceptor)
 		}.build()
 
 	}

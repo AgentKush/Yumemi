@@ -54,6 +54,39 @@ class NetworkState(
 
 	fun isOfflineOrRestricted() = !isOnline() || isRestricted()
 
+	/**
+	 * Check if currently connected via WiFi.
+	 */
+	fun isWifi(): Boolean {
+		val network = connectivityManager.activeNetwork ?: return false
+		val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+		return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+	}
+
+	/**
+	 * Check if currently connected via cellular.
+	 */
+	fun isCellular(): Boolean {
+		val network = connectivityManager.activeNetwork ?: return false
+		val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+		return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+	}
+
+	/**
+	 * Get the current transport type as a readable string.
+	 */
+	fun getTransportType(): String {
+		val network = connectivityManager.activeNetwork ?: return "none"
+		val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return "unknown"
+		return when {
+			capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "wifi"
+			capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "cellular"
+			capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "ethernet"
+			capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> "vpn"
+			else -> "other"
+		}
+	}
+
 	suspend fun awaitForConnection() {
 		if (value) {
 			return

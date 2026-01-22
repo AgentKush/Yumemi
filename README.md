@@ -1,7 +1,7 @@
 # Yumemi
 
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png" width="120" alt="Yumemi Logo"/>
+  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" width="120" alt="Yumemi Logo"/>
 </p>
 
 <p align="center">

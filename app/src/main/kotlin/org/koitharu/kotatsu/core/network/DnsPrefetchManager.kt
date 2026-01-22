@@ -3,12 +3,9 @@ package org.koitharu.kotatsu.core.network
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koitharu.kotatsu.core.os.NetworkState
 import org.koitharu.kotatsu.explore.data.MangaSourcesRepository
-import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.model.MangaSource
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,9 +14,8 @@ import javax.inject.Singleton
  * Manages DNS prefetching for manga sources.
  *
  * Automatically prefetches DNS for:
- * - All enabled manga sources when app starts
- * - Sources when they become enabled
  * - Common CDN domains used by multiple sources
+ * - Source-specific domains when sources are accessed
  */
 @Singleton
 class DnsPrefetchManager @Inject constructor(
@@ -40,34 +36,20 @@ class DnsPrefetchManager @Inject constructor(
 
 		// Start prefetcher with common domains
 		dnsPrefetcher.start()
-
-		// Observe enabled sources and prefetch their domains
-		sourcesRepository.observeEnabledSources()
-			.onEach { sources ->
-				if (networkState.isOnline()) {
-					prefetchSourceDomains(sources.map { it.mangaSource })
-				}
-			}
-			.launchIn(scope)
-
-		// Initial prefetch
-		scope.launch {
-			val enabledSources = sourcesRepository.getEnabledSources()
-			prefetchSourceDomains(enabledSources)
-		}
 	}
 
 	/**
 	 * Prefetch DNS for a specific source when the user opens it.
 	 */
 	fun prefetchForSource(source: MangaSource) {
-		val domain = extractDomainFromSource(source) ?: return
-		dnsPrefetcher.prefetch(domain)
+		if (!networkState.isOnline()) return
 
-		// Also prefetch common image CDN domains for this source
+		// Prefetch common image CDN domains for this source
 		val cdnDomains = getSourceCdnDomains(source)
 		if (cdnDomains.isNotEmpty()) {
-			dnsPrefetcher.prefetch(*cdnDomains.toTypedArray())
+			scope.launch {
+				dnsPrefetcher.prefetch(*cdnDomains.toTypedArray())
+			}
 		}
 	}
 
@@ -75,7 +57,10 @@ class DnsPrefetchManager @Inject constructor(
 	 * Prefetch DNS for URLs that are about to be loaded.
 	 */
 	fun prefetchForUrls(vararg urls: String) {
-		dnsPrefetcher.prefetchFromUrls(*urls)
+		if (!networkState.isOnline()) return
+		scope.launch {
+			dnsPrefetcher.prefetchFromUrls(*urls)
+		}
 	}
 
 	/**
@@ -92,24 +77,6 @@ class DnsPrefetchManager @Inject constructor(
 		dnsPrefetcher.clearCache()
 	}
 
-	private fun prefetchSourceDomains(sources: List<MangaSource>) {
-		val domains = sources.mapNotNull { extractDomainFromSource(it) }.toSet()
-		if (domains.isNotEmpty()) {
-			dnsPrefetcher.prefetch(*domains.toTypedArray())
-		}
-	}
-
-	private fun extractDomainFromSource(source: MangaSource): String? {
-		if (source !is MangaParserSource) return null
-
-		// Extract domain from source's known domains
-		return try {
-			source.domains.firstOrNull()
-		} catch (e: Exception) {
-			null
-		}
-	}
-
 	private fun getSourceCdnDomains(source: MangaSource): Set<String> {
 		// Common CDN domains used by manga sites
 		// This can be extended based on known source patterns
@@ -120,6 +87,13 @@ class DnsPrefetchManager @Inject constructor(
 			)
 			source.name.contains("webtoon", ignoreCase = true) -> setOf(
 				"webtoon-phinf.pstatic.net",
+			)
+			source.name.contains("mangakakalot", ignoreCase = true) -> setOf(
+				"cm.blazefast.co",
+				"avt.mkklcdnv6temp.com",
+			)
+			source.name.contains("mangasee", ignoreCase = true) -> setOf(
+				"temp.compsci88.com",
 			)
 			else -> emptySet()
 		}

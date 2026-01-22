@@ -26,6 +26,7 @@ import org.koitharu.kotatsu.R
 import org.koitharu.kotatsu.core.db.MangaDatabase
 import org.koitharu.kotatsu.core.os.AppValidator
 import org.koitharu.kotatsu.core.os.RomCompat
+import org.koitharu.kotatsu.core.network.DnsPrefetchManager
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.util.ext.processLifecycleScope
 import org.koitharu.kotatsu.local.data.LocalStorageChanges
@@ -62,6 +63,9 @@ open class BaseApp : Application(), Configuration.Provider {
 	lateinit var workScheduleManager: WorkScheduleManager
 
 	@Inject
+	lateinit var dnsPrefetchManager: DnsPrefetchManager
+
+	@Inject
 	lateinit var localMangaIndexProvider: Provider<LocalMangaIndex>
 
 	@Inject
@@ -94,6 +98,7 @@ open class BaseApp : Application(), Configuration.Provider {
 			localStorageChanges.collect(localMangaIndexProvider.get())
 		}
 		workScheduleManager.init()
+		dnsPrefetchManager.initialize()
 	}
 
 	override fun attachBaseContext(base: Context) {

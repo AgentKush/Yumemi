@@ -64,6 +64,7 @@ interface NetworkModule {
 			cookieJar: CookieJar,
 			settings: AppSettings,
 			proxyProvider: ProxyProvider,
+			dnsPrefetcher: DnsPrefetcher,
 		): OkHttpClient = OkHttpClient.Builder().apply {
 			assertNotInMainThread()
 			connectTimeout(20, TimeUnit.SECONDS)
@@ -72,7 +73,10 @@ interface NetworkModule {
 			cookieJar(cookieJar)
 			proxySelector(proxyProvider.selector)
 			proxyAuthenticator(proxyProvider.authenticator)
-			dns(DoHManager(cache, settings))
+			// Set up DNS with prefetching - prefetcher wraps DoHManager
+			val dohManager = DoHManager(cache, settings)
+			dnsPrefetcher.setDelegate(dohManager)
+			dns(dnsPrefetcher)
 			if (settings.isSSLBypassEnabled) {
 				disableCertificateVerification()
 			} else {

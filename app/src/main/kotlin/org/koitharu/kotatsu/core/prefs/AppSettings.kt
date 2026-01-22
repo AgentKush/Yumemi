@@ -286,6 +286,14 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val isMirrorSwitchingEnabled: Boolean
 		get() = prefs.getBoolean(KEY_MIRROR_SWITCHING, false)
 
+	/**
+	 * JavaScript evaluation timeout in milliseconds.
+	 * Used for CloudFlare challenges and other WebView JS operations.
+	 * Default: 4000ms, Range: 2000-30000ms
+	 */
+	val jsTimeoutMs: Long
+		get() = prefs.getInt(KEY_JS_TIMEOUT, 4000).toLong().coerceIn(2000L, 30000L)
+
 	val isExitConfirmationEnabled: Boolean
 		get() = prefs.getBoolean(KEY_EXIT_CONFIRM, false)
 
@@ -777,6 +785,7 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_READER_AUTOSCROLL_SPEED = "as_speed"
 		const val KEY_READER_AUTOSCROLL_FAB = "as_fab"
 		const val KEY_MIRROR_SWITCHING = "mirror_switching"
+		const val KEY_JS_TIMEOUT = "js_timeout"
 		const val KEY_PROXY = "proxy"
 		const val KEY_PROXY_TYPE = "proxy_type_2"
 		const val KEY_PROXY_ADDRESS = "proxy_address"

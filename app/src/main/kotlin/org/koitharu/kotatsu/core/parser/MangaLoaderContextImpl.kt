@@ -16,6 +16,7 @@ import org.koitharu.kotatsu.core.image.BitmapDecoderCompat
 import org.koitharu.kotatsu.core.network.MangaHttpClient
 import org.koitharu.kotatsu.core.network.cookies.MutableCookieJar
 import org.koitharu.kotatsu.core.network.webview.WebViewExecutor
+import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.SourceSettings
 import org.koitharu.kotatsu.core.util.ext.toList
 import org.koitharu.kotatsu.core.util.ext.toMimeType
@@ -28,7 +29,6 @@ import org.koitharu.kotatsu.parsers.model.MangaSource
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.map
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,9 +38,15 @@ class MangaLoaderContextImpl @Inject constructor(
 	override val cookieJar: MutableCookieJar,
 	@ApplicationContext private val androidContext: Context,
 	private val webViewExecutor: WebViewExecutor,
+	private val appSettings: AppSettings,
 ) : MangaLoaderContext() {
 
-	private val jsTimeout = TimeUnit.SECONDS.toMillis(4)
+	/**
+	 * JS evaluation timeout - configurable via settings.
+	 * Useful for complex CloudFlare challenges that may need more time.
+	 */
+	private val jsTimeout: Long
+		get() = appSettings.jsTimeoutMs
 
 	@Deprecated("Provide a base url")
 	@SuppressLint("SetJavaScriptEnabled")

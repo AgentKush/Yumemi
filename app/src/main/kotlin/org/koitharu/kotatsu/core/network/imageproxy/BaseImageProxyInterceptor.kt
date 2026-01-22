@@ -1,7 +1,6 @@
 package org.koitharu.kotatsu.core.network.imageproxy
 
 import android.util.Log
-import androidx.collection.ArraySet
 import coil3.intercept.Interceptor
 import coil3.network.HttpException
 import coil3.request.ErrorResult
@@ -21,11 +20,15 @@ import org.koitharu.kotatsu.parsers.util.await
 import org.koitharu.kotatsu.parsers.util.isHttpOrHttps
 import org.koitharu.kotatsu.parsers.util.runCatchingCancellable
 import java.net.HttpURLConnection
-import java.util.Collections
 
-abstract class BaseImageProxyInterceptor : ImageProxyInterceptor {
-
-	private val blacklist = Collections.synchronizedSet(ArraySet<String>())
+/**
+ * Base class for image proxy interceptors with persistent blacklist support.
+ *
+ * @param blacklistManager Manager for persistent host blacklisting (optional for backward compatibility)
+ */
+abstract class BaseImageProxyInterceptor(
+	private val blacklistManager: ProxyBlacklistManager? = null,
+) : ImageProxyInterceptor {
 
 	final override suspend fun intercept(chain: Interceptor.Chain): ImageResult {
 		val request = chain.request
@@ -34,7 +37,7 @@ abstract class BaseImageProxyInterceptor : ImageProxyInterceptor {
 			is String -> data.toHttpUrlOrNull()
 			else -> null
 		}
-		if (url == null || !url.isHttpOrHttps || url.host in blacklist) {
+		if (url == null || !url.isHttpOrHttps || isBlacklisted(url.host)) {
 			return chain.proceed()
 		}
 		val newRequest = onInterceptImageRequest(request, url)
@@ -44,7 +47,7 @@ abstract class BaseImageProxyInterceptor : ImageProxyInterceptor {
 				logDebug(result.throwable, newRequest.data)
 				chain.proceed().also {
 					if (it is SuccessResult && result.throwable.isBlockedByServer()) {
-						blacklist.add(url.host)
+						addToBlacklist(url.host)
 					}
 				}
 			}
@@ -59,7 +62,7 @@ abstract class BaseImageProxyInterceptor : ImageProxyInterceptor {
 			logDebug(error, newRequest.url)
 			okHttp.doCall(request).also {
 				if (error.isBlockedByServer()) {
-					blacklist.add(request.url.host)
+					addToBlacklist(request.url.host)
 				}
 			}
 		}.getOrThrow()
@@ -68,6 +71,14 @@ abstract class BaseImageProxyInterceptor : ImageProxyInterceptor {
 	protected abstract suspend fun onInterceptImageRequest(request: ImageRequest, url: HttpUrl): ImageRequest
 
 	protected abstract suspend fun onInterceptPageRequest(request: Request): Request
+
+	private fun isBlacklisted(host: String): Boolean {
+		return blacklistManager?.isBlacklisted(host) == true
+	}
+
+	private fun addToBlacklist(host: String) {
+		blacklistManager?.addToBlacklist(host)
+	}
 
 	private suspend fun OkHttpClient.doCall(request: Request): Response {
 		return newCall(request).await().ensureSuccess()

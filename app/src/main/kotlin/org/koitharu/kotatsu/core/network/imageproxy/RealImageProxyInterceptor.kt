@@ -17,6 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class RealImageProxyInterceptor @Inject constructor(
 	private val settings: AppSettings,
+	private val blacklistManager: ProxyBlacklistManager,
 ) : ImageProxyInterceptor {
 
 	private val delegate = settings.observeAsStateFlow(
@@ -35,8 +36,8 @@ class RealImageProxyInterceptor @Inject constructor(
 
 	private fun createDelegate(): ImageProxyInterceptor? = when (val proxy = settings.imagesProxy) {
 		-1 -> null
-		0 -> WsrvNlProxyInterceptor()
-		1 -> ZeroMsProxyInterceptor()
+		0 -> WsrvNlProxyInterceptor(blacklistManager)
+		1 -> ZeroMsProxyInterceptor(blacklistManager)
 		else -> error("Unsupported images proxy $proxy")
 	}
 }

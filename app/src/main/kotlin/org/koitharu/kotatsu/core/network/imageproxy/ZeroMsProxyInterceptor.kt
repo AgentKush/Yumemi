@@ -5,7 +5,9 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 
-class ZeroMsProxyInterceptor : BaseImageProxyInterceptor() {
+class ZeroMsProxyInterceptor(
+	blacklistManager: ProxyBlacklistManager? = null,
+) : BaseImageProxyInterceptor(blacklistManager) {
 
 	override suspend fun onInterceptImageRequest(request: ImageRequest, url: HttpUrl): ImageRequest {
 		if (url.host == "v.recipes") {

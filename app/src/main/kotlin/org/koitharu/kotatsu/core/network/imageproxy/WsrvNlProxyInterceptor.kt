@@ -6,7 +6,9 @@ import coil3.size.isOriginal
 import okhttp3.HttpUrl
 import okhttp3.Request
 
-class WsrvNlProxyInterceptor : BaseImageProxyInterceptor() {
+class WsrvNlProxyInterceptor(
+	blacklistManager: ProxyBlacklistManager? = null,
+) : BaseImageProxyInterceptor(blacklistManager) {
 
 	override suspend fun onInterceptImageRequest(request: ImageRequest, url: HttpUrl): ImageRequest {
 		val newUrl = HttpUrl.Builder()

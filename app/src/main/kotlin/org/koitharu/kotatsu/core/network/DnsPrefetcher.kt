@@ -14,6 +14,7 @@ import org.koitharu.kotatsu.BuildConfig
 import org.koitharu.kotatsu.core.os.NetworkState
 import java.net.InetAddress
 import java.net.UnknownHostException
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -36,7 +37,7 @@ class DnsPrefetcher @Inject constructor(
 	private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 	private val cache = ConcurrentHashMap<String, DnsCacheEntry>()
 	private val refreshMutex = Mutex()
-	private val pendingPrefetches = ConcurrentHashMap.newKeySet<String>()
+	private val pendingPrefetches: MutableSet<String> = Collections.newSetFromMap(ConcurrentHashMap())
 
 	private var delegate: Dns = Dns.SYSTEM
 	private var isRunning = false

@@ -294,6 +294,19 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val jsTimeoutMs: Long
 		get() = prefs.getInt(KEY_JS_TIMEOUT, 4000).toLong().coerceIn(2000L, 30000L)
 
+	/**
+	 * Memory cache TTL settings in minutes.
+	 * Controls how long manga details, pages, and related manga are cached in memory.
+	 */
+	val cacheDetailsTtlMinutes: Int
+		get() = prefs.getInt(KEY_CACHE_DETAILS_TTL, DEFAULT_CACHE_DETAILS_TTL).coerceIn(1, 60)
+
+	val cachePagesTtlMinutes: Int
+		get() = prefs.getInt(KEY_CACHE_PAGES_TTL, DEFAULT_CACHE_PAGES_TTL).coerceIn(1, 120)
+
+	val cacheRelatedTtlMinutes: Int
+		get() = prefs.getInt(KEY_CACHE_RELATED_TTL, DEFAULT_CACHE_RELATED_TTL).coerceIn(1, 120)
+
 	val isExitConfirmationEnabled: Boolean
 		get() = prefs.getBoolean(KEY_EXIT_CONFIRM, false)
 
@@ -786,6 +799,9 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_READER_AUTOSCROLL_FAB = "as_fab"
 		const val KEY_MIRROR_SWITCHING = "mirror_switching"
 		const val KEY_JS_TIMEOUT = "js_timeout"
+		const val KEY_CACHE_DETAILS_TTL = "cache_details_ttl"
+		const val KEY_CACHE_PAGES_TTL = "cache_pages_ttl"
+		const val KEY_CACHE_RELATED_TTL = "cache_related_ttl"
 		const val KEY_PROXY = "proxy"
 		const val KEY_PROXY_TYPE = "proxy_type_2"
 		const val KEY_PROXY_ADDRESS = "proxy_address"
@@ -854,5 +870,10 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		// values
 		private const val READER_CROP_PAGED = 1
 		private const val READER_CROP_WEBTOON = 2
+
+		// cache TTL defaults (in minutes)
+		const val DEFAULT_CACHE_DETAILS_TTL = 5
+		const val DEFAULT_CACHE_PAGES_TTL = 10
+		const val DEFAULT_CACHE_RELATED_TTL = 10
 	}
 }

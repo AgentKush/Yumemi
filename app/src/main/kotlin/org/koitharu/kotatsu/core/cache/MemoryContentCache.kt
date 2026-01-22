@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.core.cache
 import android.app.Application
 import android.content.ComponentCallbacks2
 import android.content.res.Configuration
+import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.util.ext.isLowRamDevice
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaPage
@@ -11,16 +12,41 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * In-memory cache for manga content with configurable TTL.
+ *
+ * Cache TTL settings can be configured in AppSettings:
+ * - Details cache: default 5 minutes (configurable 1-60 min)
+ * - Pages cache: default 10 minutes (configurable 1-120 min)
+ * - Related manga cache: default 10 minutes (configurable 1-120 min)
+ *
+ * Note: Changes to TTL settings require app restart to take effect.
+ */
 @Singleton
-class MemoryContentCache @Inject constructor(application: Application) : ComponentCallbacks2 {
+class MemoryContentCache @Inject constructor(
+	application: Application,
+	settings: AppSettings,
+) : ComponentCallbacks2 {
 
 	private val isLowRam = application.isLowRamDevice()
 
-	private val detailsCache = ExpiringLruCache<SafeDeferred<Manga>>(if (isLowRam) 1 else 4, 5, TimeUnit.MINUTES)
-	private val pagesCache =
-		ExpiringLruCache<SafeDeferred<List<MangaPage>>>(if (isLowRam) 1 else 4, 10, TimeUnit.MINUTES)
-	private val relatedMangaCache =
-		ExpiringLruCache<SafeDeferred<List<Manga>>>(if (isLowRam) 1 else 3, 10, TimeUnit.MINUTES)
+	private val detailsCache = ExpiringLruCache<SafeDeferred<Manga>>(
+		maxSize = if (isLowRam) 1 else 4,
+		lifetime = settings.cacheDetailsTtlMinutes.toLong(),
+		timeUnit = TimeUnit.MINUTES,
+	)
+
+	private val pagesCache = ExpiringLruCache<SafeDeferred<List<MangaPage>>>(
+		maxSize = if (isLowRam) 1 else 4,
+		lifetime = settings.cachePagesTtlMinutes.toLong(),
+		timeUnit = TimeUnit.MINUTES,
+	)
+
+	private val relatedMangaCache = ExpiringLruCache<SafeDeferred<List<Manga>>>(
+		maxSize = if (isLowRam) 1 else 3,
+		lifetime = settings.cacheRelatedTtlMinutes.toLong(),
+		timeUnit = TimeUnit.MINUTES,
+	)
 
 	init {
 		application.registerComponentCallbacks(this)

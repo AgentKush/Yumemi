@@ -159,6 +159,32 @@ class ExternalPluginContentSource(
 			}
 	}
 
+	/**
+	 * Get related manga for a given seed manga.
+	 * Returns empty list if the plugin doesn't support related manga.
+	 */
+	@Blocking
+	@WorkerThread
+	fun getRelatedManga(seed: Manga): List<Manga> {
+		val uri = "content://${source.authority}/manga/related".toUri()
+			.buildUpon()
+			.appendPath(seed.url)
+			.build()
+		return runCatching {
+			contentResolver.query(uri, null, null, null, null)
+				.safe()
+				.use { cursor ->
+					val result = ArrayList<Manga>(cursor.count)
+					if (cursor.moveToFirst()) {
+						do {
+							result += cursor.getManga()
+						} while (cursor.moveToNext())
+					}
+					result
+				}
+		}.getOrDefault(emptyList())
+	}
+
 	@Blocking
 	@WorkerThread
 	private fun fetchLocales(): Set<Locale> {
@@ -201,6 +227,7 @@ class ExternalPluginContentSource(
 							isOriginalLocaleSupported = cursor.getBooleanOrDefault(COLUMN_ORIGINAL_LOCALE, false),
 							isAuthorSearchSupported = cursor.getBooleanOrDefault(COLUMN_AUTHOR, false),
 						),
+						isRelatedMangaSupported = cursor.getBooleanOrDefault(COLUMN_RELATED_MANGA, false),
 					)
 				} else {
 					null
@@ -304,6 +331,7 @@ class ExternalPluginContentSource(
 	class MangaSourceCapabilities(
 		val availableSortOrders: Set<SortOrder>,
 		val listFilterCapabilities: MangaListFilterCapabilities,
+		val isRelatedMangaSupported: Boolean = false,
 	)
 
 	private companion object {
@@ -316,6 +344,7 @@ class ExternalPluginContentSource(
 		const val COLUMN_YEAR = "year"
 		const val COLUMN_YEAR_RANGE = "year_range"
 		const val COLUMN_ORIGINAL_LOCALE = "original_locale"
+		const val COLUMN_RELATED_MANGA = "related_manga"
 		const val COLUMN_ID = "id"
 		const val COLUMN_NAME = "name"
 		const val COLUMN_NUMBER = "number"

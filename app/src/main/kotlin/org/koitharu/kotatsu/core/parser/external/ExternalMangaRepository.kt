@@ -63,5 +63,17 @@ class ExternalMangaRepository(
 		contentSource.getPageUrl(page.url)
 	}
 
-	override suspend fun getRelatedMangaImpl(seed: Manga): List<Manga> = emptyList() // External plugins don't support related manga
+	/**
+	 * Get related manga from external plugin.
+	 * Returns empty list if the plugin doesn't support this feature.
+	 */
+	override suspend fun getRelatedMangaImpl(seed: Manga): List<Manga> {
+		// Check if plugin supports related manga
+		if (capabilities?.isRelatedMangaSupported != true) {
+			return emptyList()
+		}
+		return runInterruptible(Dispatchers.IO) {
+			contentSource.getRelatedManga(seed)
+		}
+	}
 }

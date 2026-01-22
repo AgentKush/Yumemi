@@ -75,6 +75,8 @@ import org.koitharu.kotatsu.core.util.ext.writeAllCancellable
 import org.koitharu.kotatsu.core.util.progress.RealtimeEtaEstimator
 import org.koitharu.kotatsu.download.domain.DownloadProgress
 import org.koitharu.kotatsu.download.domain.DownloadState
+import org.koitharu.kotatsu.download.domain.DownloadStateTracker
+import org.koitharu.kotatsu.download.domain.ResumableDownloader
 import org.koitharu.kotatsu.local.data.LocalMangaRepository
 import org.koitharu.kotatsu.local.data.LocalStorageCache
 import org.koitharu.kotatsu.local.data.LocalStorageChanges
@@ -113,6 +115,8 @@ class DownloadWorker @AssistedInject constructor(
 	@LocalStorageChanges private val localStorageChanges: MutableSharedFlow<LocalManga?>,
 	private val slowdownDispatcher: DownloadSlowdownDispatcher,
 	private val imageProxyInterceptor: ImageProxyInterceptor,
+	private val resumableDownloader: ResumableDownloader,
+	private val downloadStateTracker: DownloadStateTracker,
 	notificationFactoryFactory: DownloadNotificationFactory.Factory,
 ) : CoroutineWorker(appContext, params) {
 
@@ -395,27 +399,48 @@ class DownloadWorker @AssistedInject constructor(
 			}
 			return file
 		}
+		
+		// HTTP download with resume support
 		val request = PageLoader.createPageRequest(url, source)
 		slowdownDispatcher.delay(source)
-		return imageProxyInterceptor.interceptPageRequest(request, okHttp)
-			.ensureSuccess()
-			.use { response ->
-				var file: File? = null
-				try {
-					response.requireBody().use { body ->
-						file = destination.createTempFile(
-							ext = MimeTypes.getExtension(body.contentType()?.toMimeType())
-						)
-						file.sink(append = false).buffer().use {
-							it.writeAllCancellable(body.source())
-						}
-					}
-				} catch (e: Exception) {
-					file?.delete()
-					throw e
+		
+		// Check for existing partial download
+		val partialState = downloadStateTracker.getPartialFile(url)
+		val targetFile = if (partialState != null) {
+			File(partialState.filePath)
+		} else {
+			destination.createTempFile(null) // Extension determined after download
+		}
+		
+		return try {
+			// Use resumable downloader for HTTP requests
+			resumableDownloader.download(request, targetFile)
+			
+			// Clean up tracking after successful download
+			downloadStateTracker.removePartialFile(url)
+			
+			// Rename with correct extension if needed
+			val mimeType = getMediaType(url, targetFile)
+			val ext = mimeType?.let { MimeTypes.getExtension(it) }
+			if (!ext.isNullOrEmpty() && !targetFile.name.contains(".$ext")) {
+				val renamedFile = File(targetFile.parent, "${targetFile.nameWithoutExtension}.$ext.tmp")
+				if (targetFile.renameTo(renamedFile)) {
+					renamedFile
+				} else {
+					targetFile
 				}
-				checkNotNull(file)
+			} else {
+				targetFile
 			}
+		} catch (e: Exception) {
+			// Track partial download for potential resume
+			if (targetFile.exists() && targetFile.length() > 0) {
+				downloadStateTracker.trackPartialFile(url, targetFile, -1L)
+			} else {
+				targetFile.delete()
+			}
+			throw e
+		}
 	}
 
 	private fun File.createTempFile(ext: String?) = File(

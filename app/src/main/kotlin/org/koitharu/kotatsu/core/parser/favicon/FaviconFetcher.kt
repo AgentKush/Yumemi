@@ -52,6 +52,11 @@ class FaviconFetcher(
 	private val localStorageCache: LocalStorageCache,
 ) : Fetcher {
 
+	// Use applicationContext to avoid holding reference to Activity after destruction
+	private val safeOptions: Options by lazy {
+		options.copy(context = options.context.applicationContext)
+	}
+
 	override suspend fun fetch(): FetchResult? {
 		val mangaSource = MangaSource(uri.schemeSpecificPart)
 
@@ -64,7 +69,7 @@ class FaviconFetcher(
 				dataSource = DataSource.MEMORY,
 			)
 
-			is LocalMangaRepository -> imageLoader.fetch(R.drawable.ic_storage, options)
+			is LocalMangaRepository -> imageLoader.fetch(R.drawable.ic_storage, safeOptions)
 
 			else -> throw IllegalArgumentException("Unsupported repo ${repo.javaClass.simpleName}")
 		}
@@ -72,11 +77,11 @@ class FaviconFetcher(
 
 	private suspend fun fetchParserFavicon(repository: ParserMangaRepository): FetchResult {
 		val sizePx = maxOf(
-			options.size.width.pxOrElse { FALLBACK_SIZE },
-			options.size.height.pxOrElse { FALLBACK_SIZE },
+			safeOptions.size.width.pxOrElse { FALLBACK_SIZE },
+			safeOptions.size.height.pxOrElse { FALLBACK_SIZE },
 		)
-		val cacheKey = options.diskCacheKey ?: "${repository.source.name}_$sizePx"
-		if (options.diskCachePolicy.readEnabled) {
+		val cacheKey = safeOptions.diskCacheKey ?: "${repository.source.name}_$sizePx"
+		if (safeOptions.diskCachePolicy.readEnabled) {
 			localStorageCache[cacheKey]?.let { file ->
 				return SourceFetchResult(
 					source = ImageSource(file.toOkioPath(), FileSystem.SYSTEM),
@@ -91,9 +96,9 @@ class FaviconFetcher(
 			currentCoroutineContext().ensureActive()
 			val icon = favicons.find(sizePx) ?: throwNSEE(lastError)
 			try {
-				val result = imageLoader.fetch(icon.url, options)
+				val result = imageLoader.fetch(icon.url, safeOptions)
 				if (result != null) {
-					return if (options.diskCachePolicy.writeEnabled) {
+					return if (safeOptions.diskCachePolicy.writeEnabled) {
 						writeToCache(cacheKey, result)
 					} else {
 						result
@@ -113,7 +118,8 @@ class FaviconFetcher(
 
 	private suspend fun fetchPluginIcon(repository: ExternalMangaRepository): FetchResult {
 		val source = repository.source
-		val pm = options.context.packageManager
+		// Use application context to avoid leaking Activity context
+		val pm = safeOptions.context.packageManager
 		val icon = runInterruptible {
 			val provider = pm.resolveContentProvider(source.authority, 0)
 			provider?.loadIcon(pm) ?: pm.getApplicationIcon(source.packageName)

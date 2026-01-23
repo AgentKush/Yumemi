@@ -143,6 +143,7 @@ class PagesFragment :
 	}
 
 	override fun onDestroyView() {
+		viewBinding?.recyclerView?.adapter = null
 		spanResolver = null
 		scrollListener = null
 		thumbnailsAdapter = null

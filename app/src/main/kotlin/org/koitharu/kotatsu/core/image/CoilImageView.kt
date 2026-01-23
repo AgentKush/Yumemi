@@ -201,6 +201,16 @@ open class CoilImageView @JvmOverloads constructor(
 		Scale.FIT
 	}
 
+	override fun onDetachedFromWindow() {
+		super.onDetachedFromWindow()
+		// Cancel any pending image requests to prevent memory leaks
+		// when the view is detached (e.g., fragment destroyed)
+		networkWaitingJob?.cancel()
+		networkWaitingJob = null
+		currentRequest?.dispose()
+		currentRequest = null
+	}
+
 	private fun waitForNetwork() {
 		if (networkWaitingJob?.isActive == true || networkState.isOnline()) {
 			return

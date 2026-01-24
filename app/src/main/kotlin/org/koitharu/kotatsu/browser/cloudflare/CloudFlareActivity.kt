@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.browser.cloudflare
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContract
@@ -48,7 +49,9 @@ class CloudFlareActivity : BaseBrowserActivity(), CloudFlareCallback {
 	override fun onCreate2(savedInstanceState: Bundle?, source: MangaSource, repository: ParserMangaRepository?) {
 		setDisplayHomeAsUp(isEnabled = true, showUpAsClose = true)
 		val url = intent?.dataString
+		Log.d(TAG, "onCreate2: url=$url, source=$source")
 		if (url.isNullOrEmpty()) {
+			Log.w(TAG, "URL is empty, finishing")
 			finishAfterTransition()
 			return
 		}
@@ -58,10 +61,12 @@ class CloudFlareActivity : BaseBrowserActivity(), CloudFlareCallback {
 			try {
 				proxyProvider.applyWebViewConfig()
 			} catch (e: Exception) {
+				Log.e(TAG, "Failed to apply WebView config", e)
 				Snackbar.make(viewBinding.webView, e.getDisplayMessage(resources), Snackbar.LENGTH_LONG).show()
 			}
 			if (savedInstanceState == null) {
 				onTitleChanged(getString(R.string.loading_), url)
+				Log.d(TAG, "Loading URL: $url")
 				viewBinding.webView.loadUrl(url)
 			}
 		}
@@ -79,6 +84,21 @@ class CloudFlareActivity : BaseBrowserActivity(), CloudFlareCallback {
 			true
 		}
 
+		R.id.action_done -> {
+			Log.d(TAG, "User pressed Done button")
+			if (cfClient.manualCheck()) {
+				Log.i(TAG, "Manual check passed!")
+			} else {
+				Log.w(TAG, "Manual check failed - no clearance cookie found")
+				Snackbar.make(
+					viewBinding.webView,
+					R.string.captcha_not_solved,
+					Snackbar.LENGTH_SHORT
+				).show()
+			}
+			true
+		}
+
 		R.id.action_retry -> {
 			restartCheck()
 			true
@@ -88,6 +108,7 @@ class CloudFlareActivity : BaseBrowserActivity(), CloudFlareCallback {
 	}
 
 	override fun finish() {
+		Log.d(TAG, "finish() called with result: $pendingResult")
 		setResult(pendingResult)
 		super.finish()
 	}
@@ -99,13 +120,21 @@ class CloudFlareActivity : BaseBrowserActivity(), CloudFlareCallback {
 	}
 
 	override fun onLoopDetected() {
+		Log.w(TAG, "Loop detected, restarting check")
+		Snackbar.make(
+			viewBinding.webView,
+			R.string.network_error,
+			Snackbar.LENGTH_SHORT
+		).show()
 		restartCheck()
 	}
 
 	override fun onCheckPassed() {
+		Log.i(TAG, "Check passed! Setting result to OK")
 		pendingResult = RESULT_OK
 		lifecycleScope.launch {
 			val source = intent?.getStringExtra(AppRouter.KEY_SOURCE)
+			Log.d(TAG, "Discarding captcha for source: $source")
 			if (source != null) {
 				runCatchingCancellable {
 					captchaHandler.discard(MangaSource(source))
@@ -129,6 +158,7 @@ class CloudFlareActivity : BaseBrowserActivity(), CloudFlareCallback {
 			cfClient.reset()
 			val targetUrl = intent?.dataString?.toHttpUrlOrNull()
 			if (targetUrl != null) {
+				Log.d(TAG, "Restarting check, clearing CF cookies for: $targetUrl")
 				clearCfCookies(targetUrl)
 				viewBinding.webView.loadUrl(targetUrl.toString())
 			}
@@ -152,7 +182,6 @@ class CloudFlareActivity : BaseBrowserActivity(), CloudFlareCallback {
 	}
 
 	companion object {
-
 		const val TAG = "CloudFlareActivity"
 	}
 }

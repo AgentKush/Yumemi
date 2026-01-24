@@ -4,6 +4,12 @@
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 
 	<item
+		android:id="@+id/action_done"
+		android:title="@string/done"
+		android:icon="@drawable/ic_check"
+		app:showAsAction="ifRoom" />
+
+	<item
 		android:id="@+id/action_retry"
 		android:title="@string/try_again"
 		app:showAsAction="never" />

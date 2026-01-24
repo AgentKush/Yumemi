@@ -164,6 +164,7 @@
     <string name="silent">Silent</string>
     <string name="captcha_required">CAPTCHA required</string>
     <string name="captcha_solve">Solve</string>
+    <string name="captcha_not_solved">Challenge not completed yet. Please solve the captcha first.</string>
     <string name="clear_cookies">Clear cookies</string>
     <string name="cookies_cleared">All cookies were removed</string>
     <string name="clear_feed">Clear feed</string>

@@ -96,6 +96,8 @@ class ReaderConfigSheet :
         binding.sliderDoubleSensitivity.setValueRounded(settings.readerDoublePagesSensitivity * 100f)
         binding.sliderDoubleSensitivity.setLabelFormatter(IntPercentLabelFormatter(binding.root.context))
         binding.adjustSensitivitySlider(withAnimation = false)
+        binding.switchPageGaps.isChecked = !settings.isHorizontalPageGapsEnabled
+        binding.adjustPageGapsSwitch()
 
         binding.checkableGroup.addOnButtonCheckedListener(this)
         binding.buttonSavePage.setOnClickListener(this)
@@ -107,6 +109,7 @@ class ReaderConfigSheet :
         binding.buttonBookmark.setOnClickListener(this)
         binding.switchDoubleReader.setOnCheckedChangeListener(this)
         binding.switchDoubleFoldable.setOnCheckedChangeListener(this)
+        binding.switchPageGaps.setOnCheckedChangeListener(this)
         binding.sliderDoubleSensitivity.addOnChangeListener(this)
 
         viewModel.isBookmarkAdded.observe(viewLifecycleOwner) {
@@ -191,6 +194,11 @@ class ReaderConfigSheet :
                 // Re-evaluate double-page considering foldable state and current manual toggle
                 findParentCallback(Callback::class.java)?.onDoubleModeChanged(settings.isReaderDoubleOnLandscape)
             }
+
+            R.id.switch_page_gaps -> {
+                // Switch is "Remove gaps", so invert the value
+                settings.isHorizontalPageGapsEnabled = !isChecked
+            }
         }
     }
 
@@ -217,6 +225,7 @@ class ReaderConfigSheet :
             switchDoubleReader.isEnabled = newMode == ReaderMode.STANDARD || newMode == ReaderMode.REVERSED
             switchDoubleFoldable.isEnabled = switchDoubleReader.isEnabled
             adjustSensitivitySlider(withAnimation = true)
+            adjustPageGapsSwitch(newMode)
         }
         if (newMode == mode) {
             return
@@ -264,6 +273,12 @@ class ReaderConfigSheet :
         sliderDoubleSensitivity.isVisible = isSubOptionsVisible
         textDoubleSensitivity.isVisible = isSubOptionsVisible
         switchDoubleFoldable.isVisible = isSubOptionsVisible
+    }
+
+    private fun SheetReaderConfigBinding.adjustPageGapsSwitch(readerMode: ReaderMode = mode) {
+        // Page gaps toggle only applies to horizontal reading modes (Standard, Reversed)
+        val isHorizontalMode = readerMode == ReaderMode.STANDARD || readerMode == ReaderMode.REVERSED
+        switchPageGaps.isVisible = isHorizontalMode
     }
 
     interface Callback {

@@ -13,6 +13,7 @@ import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.PageTransformer
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
@@ -29,6 +30,7 @@ import org.koitharu.kotatsu.databinding.FragmentReaderPagerBinding
 import org.koitharu.kotatsu.reader.domain.PageLoader
 import org.koitharu.kotatsu.reader.ui.ReaderState
 import org.koitharu.kotatsu.reader.ui.pager.standard.NoAnimPageTransformer
+import org.koitharu.kotatsu.reader.ui.pager.standard.GaplessPageTransformer
 import org.koitharu.kotatsu.reader.ui.pager.standard.PageAnimTransformer
 import org.koitharu.kotatsu.reader.ui.pager.standard.PageHolder
 import org.koitharu.kotatsu.reader.ui.pager.standard.PagerEventSupplier
@@ -73,11 +75,23 @@ abstract class BasePagerReaderFragment : BaseReaderFragment<FragmentReaderPagerB
 			adapter = readerAdapter
 		}
 
-		viewModel.pageAnimation.observe(viewLifecycleOwner) {
-			val transformer = when (it) {
-				ReaderAnimation.NONE -> NoAnimPageTransformer(binding.pager.orientation)
-				ReaderAnimation.DEFAULT -> null
-				ReaderAnimation.ADVANCED -> onCreateAdvancedTransformer()
+		combine(
+			viewModel.pageAnimation,
+			viewModel.isHorizontalPageGapsEnabled
+		) { animation, gapsEnabled ->
+			Pair(animation, gapsEnabled)
+		}.observe(viewLifecycleOwner) { (animation, gapsEnabled) ->
+			val transformer = when {
+				// If gaps disabled in horizontal mode, use gapless transformer
+				!gapsEnabled && binding.pager.orientation == ViewPager2.ORIENTATION_HORIZONTAL -> {
+					GaplessPageTransformer()
+				}
+				// Otherwise use animation-based transformer
+				else -> when (animation) {
+					ReaderAnimation.NONE -> NoAnimPageTransformer(binding.pager.orientation)
+					ReaderAnimation.DEFAULT -> null
+					ReaderAnimation.ADVANCED -> onCreateAdvancedTransformer()
+				}
 			}
 			binding.pager.setPageTransformer(transformer)
 			if (transformer == null) {

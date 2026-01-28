@@ -165,6 +165,18 @@ class ReaderViewModel @Inject constructor(
         valueProducer = { isWebtoonPullGestureEnabled },
     )
 
+    val isDoublePageGapsEnabled = settings.observeAsStateFlow(
+        scope = viewModelScope + Dispatchers.Default,
+        key = AppSettings.KEY_DOUBLE_PAGE_GAPS,
+        valueProducer = { isDoublePageGapsEnabled },
+    )
+
+    val isHorizontalPageGapsEnabled = settings.observeAsStateFlow(
+        scope = viewModelScope + Dispatchers.Default,
+        key = AppSettings.KEY_HORIZONTAL_PAGE_GAPS,
+        valueProducer = { isHorizontalPageGapsEnabled },
+    )
+
     val defaultWebtoonZoomOut = observeIsWebtoonZoomEnabled().flatMapLatest {
         if (it) {
             observeWebtoonZoomOut()

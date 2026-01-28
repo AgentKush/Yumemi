@@ -147,6 +147,14 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getFloat(KEY_READER_DOUBLE_PAGES_SENSITIVITY, 0.5f)
 		set(@FloatRange(0.0, 1.0) value) = prefs.edit { putFloat(KEY_READER_DOUBLE_PAGES_SENSITIVITY, value) }
 
+	var isDoublePageGapsEnabled: Boolean
+		get() = prefs.getBoolean(KEY_DOUBLE_PAGE_GAPS, true)
+		set(value) = prefs.edit { putBoolean(KEY_DOUBLE_PAGE_GAPS, value) }
+
+	var isHorizontalPageGapsEnabled: Boolean
+		get() = prefs.getBoolean(KEY_HORIZONTAL_PAGE_GAPS, true)
+		set(value) = prefs.edit { putBoolean(KEY_HORIZONTAL_PAGE_GAPS, value) }
+
 	val readerScreenOrientation: Int
 		get() = prefs.getString(KEY_READER_ORIENTATION, null)?.toIntOrNull()
 			?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -745,6 +753,8 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_READER_DOUBLE_PAGES = "reader_double_pages"
 		const val KEY_READER_DOUBLE_PAGES_SENSITIVITY = "reader_double_pages_sensitivity_2"
 		const val KEY_READER_DOUBLE_FOLDABLE = "reader_double_foldable"
+		const val KEY_DOUBLE_PAGE_GAPS = "double_page_gaps"
+		const val KEY_HORIZONTAL_PAGE_GAPS = "horizontal_page_gaps"
 		const val KEY_READER_ZOOM_BUTTONS = "reader_zoom_buttons"
 		const val KEY_READER_CONTROL_LTR = "reader_taps_ltr"
 		const val KEY_READER_NAVIGATION_INVERTED = "reader_navigation_inverted"

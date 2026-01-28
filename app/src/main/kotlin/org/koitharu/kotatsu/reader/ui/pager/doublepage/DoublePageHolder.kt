@@ -49,11 +49,24 @@ class DoublePageHolder(
 				height / sHeight.toFloat(),
 			)
 			binding.ssiv.colorFilter = settings.colorFilter?.toColorFilter()
-			minimumScaleType = SubsamplingScaleImageView.SCALE_TYPE_CENTER_INSIDE
-			setScaleAndCenter(
-				minScale,
-				PointF(if (isEven) 0f else sWidth.toFloat(), sHeight / 2f),
-			)
+			
+			if (settings.isDoublePageGapsEnabled) {
+				// Default behavior: center image inside, may leave gaps
+				minimumScaleType = SubsamplingScaleImageView.SCALE_TYPE_CENTER_INSIDE
+				setScaleAndCenter(
+					minScale,
+					PointF(if (isEven) 0f else sWidth.toFloat(), sHeight / 2f),
+				)
+			} else {
+				// No gaps: fill width, may crop top/bottom
+				minimumScaleType = SubsamplingScaleImageView.SCALE_TYPE_CUSTOM
+				val fillWidthScale = width / sWidth.toFloat()
+				minScale = fillWidthScale
+				setScaleAndCenter(
+					fillWidthScale,
+					PointF(sWidth / 2f, sHeight / 2f),
+				)
+			}
 		}
 	}
 }

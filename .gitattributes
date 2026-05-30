@@ -1,0 +1,31 @@
+# Normalize all text files to LF in the repository.
+# Prevents the CRLF churn that made the entire tree show as "modified".
+* text=auto eol=lf
+
+# Windows batch/scripts must stay CRLF to run correctly
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+gradlew.bat  text eol=crlf
+
+# Unix shell scripts / Gradle wrapper must stay LF
+*.sh     text eol=lf
+gradlew  text eol=lf
+
+# Treat binaries as binary (never touch line endings)
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.gif   binary
+*.ico   binary
+*.svg   text eol=lf
+*.ttf   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
+*.jar   binary
+*.keystore binary
+*.jks   binary
+*.so    binary
+*.zip   binary
+*.apk   binary

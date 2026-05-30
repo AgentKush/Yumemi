@@ -29,3 +29,7 @@
 -keep class org.acra.config.DefaultRetryPolicy { *; }
 -keep class org.acra.attachment.DefaultAttachmentProvider { *; }
 -keep class org.acra.sender.JobSenderService
+
+# jsoup optionally references com.google.re2j (RE2/J), which is not bundled.
+# It falls back to java.util.regex at runtime, so these missing classes are safe to ignore for R8.
+-dontwarn com.google.re2j.**

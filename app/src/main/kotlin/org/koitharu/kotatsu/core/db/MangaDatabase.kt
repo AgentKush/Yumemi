@@ -17,6 +17,7 @@ import org.koitharu.kotatsu.core.db.dao.MangaDao
 import org.koitharu.kotatsu.core.db.dao.MangaSourcesDao
 import org.koitharu.kotatsu.core.db.dao.PreferencesDao
 import org.koitharu.kotatsu.core.db.dao.SourceHealthDao
+import org.koitharu.kotatsu.core.db.dao.MangaNotesDao
 import org.koitharu.kotatsu.core.db.dao.TagsDao
 import org.koitharu.kotatsu.core.db.dao.TrackLogsDao
 import org.koitharu.kotatsu.core.db.entity.ChapterEntity
@@ -24,6 +25,7 @@ import org.koitharu.kotatsu.core.db.entity.MangaEntity
 import org.koitharu.kotatsu.core.db.entity.MangaPrefsEntity
 import org.koitharu.kotatsu.core.db.entity.MangaSourceEntity
 import org.koitharu.kotatsu.core.db.entity.SourceHealthEntity
+import org.koitharu.kotatsu.core.db.entity.MangaNoteEntity
 import org.koitharu.kotatsu.core.db.entity.MangaTagsEntity
 import org.koitharu.kotatsu.core.db.entity.TagEntity
 import org.koitharu.kotatsu.core.db.migrations.Migration10To11
@@ -47,6 +49,7 @@ import org.koitharu.kotatsu.core.db.migrations.Migration25To26
 import org.koitharu.kotatsu.core.db.migrations.Migration26To27
 import org.koitharu.kotatsu.core.db.migrations.Migration27To28
 import org.koitharu.kotatsu.core.db.migrations.Migration28To29
+import org.koitharu.kotatsu.core.db.migrations.Migration29To30
 import org.koitharu.kotatsu.core.db.migrations.Migration2To3
 import org.koitharu.kotatsu.core.db.migrations.Migration3To4
 import org.koitharu.kotatsu.core.db.migrations.Migration4To5
@@ -74,14 +77,14 @@ import org.koitharu.kotatsu.tracker.data.TrackEntity
 import org.koitharu.kotatsu.tracker.data.TrackLogEntity
 import org.koitharu.kotatsu.tracker.data.TracksDao
 
-const val DATABASE_VERSION = 29
+const val DATABASE_VERSION = 30
 
 @Database(
 	entities = [
 		MangaEntity::class, TagEntity::class, HistoryEntity::class, MangaTagsEntity::class, ChapterEntity::class,
 		FavouriteCategoryEntity::class, FavouriteEntity::class, MangaPrefsEntity::class, TrackEntity::class,
 		TrackLogEntity::class, SuggestionEntity::class, BookmarkEntity::class, ScrobblingEntity::class,
-		MangaSourceEntity::class, StatsEntity::class, LocalMangaIndexEntity::class, SourceHealthEntity::class,
+		MangaSourceEntity::class, StatsEntity::class, LocalMangaIndexEntity::class, SourceHealthEntity::class, MangaNoteEntity::class,
 	],
 	version = DATABASE_VERSION,
 )
@@ -118,6 +121,8 @@ abstract class MangaDatabase : RoomDatabase() {
 	abstract fun getChaptersDao(): ChaptersDao
 
 	abstract fun getSourceHealthDao(): SourceHealthDao
+
+	abstract fun getMangaNotesDao(): MangaNotesDao
 }
 
 fun getDatabaseMigrations(context: Context): Array<Migration> = arrayOf(
@@ -150,6 +155,7 @@ fun getDatabaseMigrations(context: Context): Array<Migration> = arrayOf(
 	Migration26To27(),
 	Migration27To28(),
 	Migration28To29(),
+	Migration29To30(),
 )
 
 fun MangaDatabase(context: Context): MangaDatabase = Room

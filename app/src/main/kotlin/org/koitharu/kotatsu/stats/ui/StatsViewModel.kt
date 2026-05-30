@@ -13,6 +13,7 @@ import org.koitharu.kotatsu.core.ui.util.ReversibleAction
 import org.koitharu.kotatsu.core.util.ext.MutableEventFlow
 import org.koitharu.kotatsu.core.util.ext.call
 import org.koitharu.kotatsu.favourites.domain.FavouritesRepository
+import org.koitharu.kotatsu.stats.data.ReadingStreak
 import org.koitharu.kotatsu.stats.data.StatsRepository
 import org.koitharu.kotatsu.stats.domain.StatsPeriod
 import org.koitharu.kotatsu.stats.domain.StatsRecord
@@ -32,7 +33,12 @@ class StatsViewModel @Inject constructor(
 
 	val readingStats = MutableStateFlow<List<StatsRecord>>(emptyList())
 
+	val readingStreak = MutableStateFlow<ReadingStreak?>(null)
+
 	init {
+		launchJob(Dispatchers.Default) {
+			readingStreak.value = repository.getReadingStreak()
+		}
 		launchJob(Dispatchers.Default) {
 			combine<StatsPeriod, Set<Long>, Pair<StatsPeriod, Set<Long>>>(
 				period,

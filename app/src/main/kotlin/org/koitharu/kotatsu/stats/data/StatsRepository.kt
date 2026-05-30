@@ -12,6 +12,7 @@ import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.prefs.observeAsFlow
 import org.koitharu.kotatsu.stats.domain.StatsPeriod
 import org.koitharu.kotatsu.stats.domain.StatsRecord
+import java.util.Calendar
 import java.util.NavigableMap
 import java.util.TreeMap
 import java.util.concurrent.TimeUnit
@@ -76,6 +77,40 @@ class StatsRepository @Inject constructor(
 
 	suspend fun clearStats() {
 		db.getStatsDao().clear()
+	}
+
+	suspend fun getReadingStreak(): ReadingStreak {
+		val dao = db.getStatsDao()
+		val startOfToday = startOfDay(System.currentTimeMillis())
+		val todayMs = dao.getTotalDurationSince(startOfToday)
+		val oneDay = TimeUnit.DAYS.toMillis(1)
+		val days = HashSet<Long>()
+		for (t in dao.getStartTimesSince(startOfToday - TimeUnit.DAYS.toMillis(400))) {
+			days.add(startOfDay(t))
+		}
+		var cursor = startOfToday
+		if (cursor !in days) {
+			cursor = startOfDay(cursor - oneDay)
+			if (cursor !in days) {
+				return ReadingStreak(0, todayMs, settings.statsDailyGoalMinutes)
+			}
+		}
+		var streak = 0
+		while (cursor in days) {
+			streak++
+			cursor = startOfDay(cursor - oneDay)
+		}
+		return ReadingStreak(streak, todayMs, settings.statsDailyGoalMinutes)
+	}
+
+	private fun startOfDay(ts: Long): Long {
+		val cal = Calendar.getInstance()
+		cal.timeInMillis = ts
+		cal.set(Calendar.HOUR_OF_DAY, 0)
+		cal.set(Calendar.MINUTE, 0)
+		cal.set(Calendar.SECOND, 0)
+		cal.set(Calendar.MILLISECOND, 0)
+		return cal.timeInMillis
 	}
 
 	fun observeHasStats(mangaId: Long): Flow<Boolean> = settings.observeAsFlow(AppSettings.KEY_STATS_ENABLED) {

@@ -356,6 +356,9 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 	val readingReminderHour: Int
 		get() = prefs.getString(KEY_READING_REMINDER_HOUR, null)?.toIntOrNull() ?: DEFAULT_READING_REMINDER_HOUR
 
+	val statsDailyGoalMinutes: Int
+		get() = prefs.getInt(KEY_STATS_DAILY_GOAL, DEFAULT_STATS_DAILY_GOAL_MINUTES)
+
 	fun isVersionSkipped(versionName: String): Boolean {
 		return prefs.getString(KEY_SKIPPED_UPDATE_VERSION, null) == versionName
 	}
@@ -853,6 +856,7 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_LAST_UPDATE_CHECK = "last_update_check"
 		const val KEY_READING_REMINDER = "reading_reminder"
 		const val KEY_READING_REMINDER_HOUR = "reading_reminder_hour"
+		const val KEY_STATS_DAILY_GOAL = "stats_daily_goal"
 		const val KEY_SKIPPED_UPDATE_VERSION = "skipped_update_version"
 		const val KEY_TIPS_CLOSED = "tips_closed"
 		const val KEY_SSL_BYPASS = "ssl_bypass"
@@ -944,5 +948,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		// update check defaults
 		const val DEFAULT_UPDATE_CHECK_INTERVAL_HOURS = 24
 		const val DEFAULT_READING_REMINDER_HOUR = 20
+		const val DEFAULT_STATS_DAILY_GOAL_MINUTES = 20
 	}
 }

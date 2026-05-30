@@ -88,6 +88,18 @@ class StatsActivity : BaseActivity<ActivityStatsBinding>(),
 			)
 			adapter.emit(it)
 		}
+
+		viewModel.readingStreak.observe(this) { streak ->
+			streak ?: return@observe
+			viewBinding.textViewStreak?.text =
+				resources.getQuantityString(R.plurals.reading_streak_days, streak.currentStreak, streak.currentStreak)
+			val todayMin = (streak.todayDurationMs / 60_000L).toInt()
+			viewBinding.textViewGoal?.text = getString(R.string.reading_goal_progress, todayMin, streak.goalMinutes)
+			viewBinding.progressGoal?.let { bar ->
+				bar.max = streak.goalMinutes.coerceAtLeast(1)
+				bar.progress = todayMin.coerceIn(0, bar.max)
+			}
+		}
 	}
 
 	override fun onApplyWindowInsets(
@@ -165,6 +177,7 @@ class StatsActivity : BaseActivity<ActivityStatsBinding>(),
 			chart.isGone = isEmpty
 			recyclerView.isGone = isEmpty
 			stubEmpty.isVisible = isEmpty
+			cardStreak?.isGone = isEmpty
 		}
 	}
 

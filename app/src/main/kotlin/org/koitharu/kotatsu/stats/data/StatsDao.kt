@@ -29,6 +29,12 @@ abstract class StatsDao {
 	@Query("SELECT IFNULL(SUM(duration)/SUM(pages), 0) FROM stats")
 	abstract suspend fun getAverageTimePerPage(): Long
 
+	@Query("SELECT IFNULL(SUM(duration),0) FROM stats WHERE started_at >= :fromDate")
+	abstract suspend fun getTotalDurationSince(fromDate: Long): Long
+
+	@Query("SELECT started_at FROM stats WHERE started_at >= :fromDate ORDER BY started_at DESC")
+	abstract suspend fun getStartTimesSince(fromDate: Long): List<Long>
+
 	@Query("DELETE FROM stats")
 	abstract suspend fun clear()
 

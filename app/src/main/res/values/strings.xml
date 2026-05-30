@@ -115,6 +115,10 @@
     <string name="favourites_category_empty">Empty category</string>
     <string name="read_later">Read later</string>
     <string name="updates">Updates</string>
+    <string name="reading_reminders">Daily reading reminder</string>
+    <string name="reading_reminders_summary">Show a daily notification reminding you to read</string>
+    <string name="reading_reminder_title">Time to read</string>
+    <string name="reading_reminder_text">Pick up where you left off in Yumemi</string>
     <string name="text_feed_holder">New chapters of what you are reading are shown here</string>
     <string name="search_results">Search results</string>
     <string name="new_version_s">New version: %s</string>

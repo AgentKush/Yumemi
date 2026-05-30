@@ -349,6 +349,13 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getLong(KEY_LAST_UPDATE_CHECK, 0L)
 		set(value) = prefs.edit { putLong(KEY_LAST_UPDATE_CHECK, value) }
 
+	var isReadingReminderEnabled: Boolean
+		get() = prefs.getBoolean(KEY_READING_REMINDER, false)
+		set(value) = prefs.edit { putBoolean(KEY_READING_REMINDER, value) }
+
+	val readingReminderHour: Int
+		get() = prefs.getString(KEY_READING_REMINDER_HOUR, null)?.toIntOrNull() ?: DEFAULT_READING_REMINDER_HOUR
+
 	fun isVersionSkipped(versionName: String): Boolean {
 		return prefs.getString(KEY_SKIPPED_UPDATE_VERSION, null) == versionName
 	}
@@ -844,6 +851,8 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_UPDATE_CHECK_WIFI_ONLY = "update_check_wifi_only"
 		const val KEY_UPDATE_CHECK_INTERVAL = "update_check_interval"
 		const val KEY_LAST_UPDATE_CHECK = "last_update_check"
+		const val KEY_READING_REMINDER = "reading_reminder"
+		const val KEY_READING_REMINDER_HOUR = "reading_reminder_hour"
 		const val KEY_SKIPPED_UPDATE_VERSION = "skipped_update_version"
 		const val KEY_TIPS_CLOSED = "tips_closed"
 		const val KEY_SSL_BYPASS = "ssl_bypass"
@@ -934,5 +943,6 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 
 		// update check defaults
 		const val DEFAULT_UPDATE_CHECK_INTERVAL_HOURS = 24
+		const val DEFAULT_READING_REMINDER_HOUR = 20
 	}
 }

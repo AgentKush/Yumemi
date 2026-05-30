@@ -6,6 +6,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koitharu.kotatsu.core.github.AppUpdateCheckWorker
+import org.koitharu.kotatsu.core.reminders.ReadingReminderWorker
 import org.koitharu.kotatsu.core.prefs.AppSettings
 import org.koitharu.kotatsu.core.util.ext.processLifecycleScope
 import org.koitharu.kotatsu.suggestions.ui.SuggestionsWorker
@@ -43,6 +44,11 @@ class WorkScheduleManager @Inject constructor(
 			AppSettings.KEY_UPDATE_CHECK_INTERVAL -> {
 				AppUpdateCheckWorker.schedule(context, settings)
 			}
+
+			AppSettings.KEY_READING_REMINDER,
+			AppSettings.KEY_READING_REMINDER_HOUR -> {
+				ReadingReminderWorker.schedule(context, settings)
+			}
 		}
 	}
 
@@ -53,6 +59,7 @@ class WorkScheduleManager @Inject constructor(
 			updateWorkerImpl(suggestionScheduler, settings.isSuggestionsEnabled, false)
 			// Schedule app update checks
 			AppUpdateCheckWorker.schedule(context, settings)
+			ReadingReminderWorker.schedule(context, settings)
 		}
 	}
 

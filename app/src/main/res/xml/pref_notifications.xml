@@ -36,4 +36,11 @@
 		app:allowDividerAbove="true"
 		app:isPreferenceVisible="false" />
 
+	<SwitchPreferenceCompat
+		android:defaultValue="false"
+		android:key="reading_reminder"
+		android:summary="@string/reading_reminders_summary"
+		android:title="@string/reading_reminders"
+		app:allowDividerAbove="true" />
+
 </PreferenceScreen>

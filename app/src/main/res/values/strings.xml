@@ -120,6 +120,8 @@
     <string name="reading_reminder_title">Time to read</string>
     <string name="reading_reminder_text">Pick up where you left off in Yumemi</string>
     <string name="reading_goal_progress">Today: %1$d / %2$d min</string>
+    <string name="personal_note">Note &amp; rating</string>
+    <string name="note_hint">Your private note</string>
     <plurals name="reading_streak_days">
         <item quantity="one">%d-day streak</item>
         <item quantity="other">%d-day streak</item>

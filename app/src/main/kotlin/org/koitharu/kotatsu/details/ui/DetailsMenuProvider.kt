@@ -1,10 +1,13 @@
 package org.koitharu.kotatsu.details.ui
 
 import android.app.Activity
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
+import android.widget.RatingBar
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,13 +23,17 @@ import org.koitharu.kotatsu.core.nav.AppRouter
 import org.koitharu.kotatsu.core.nav.router
 import org.koitharu.kotatsu.core.os.AppShortcutManager
 import org.koitharu.kotatsu.core.ui.dialog.buildAlertDialog
+import org.koitharu.kotatsu.core.db.dao.MangaNotesDao
+import org.koitharu.kotatsu.core.db.entity.MangaNoteEntity
 import org.koitharu.kotatsu.core.util.ext.isHttpUrl
+import org.koitharu.kotatsu.parsers.model.Manga
 
 class DetailsMenuProvider(
 	private val activity: FragmentActivity,
 	private val viewModel: DetailsViewModel,
 	private val snackbarHost: View,
 	private val appShortcutManager: AppShortcutManager,
+	private val mangaNotesDao: MangaNotesDao,
 ) : MenuProvider, ActivityResultCallback<ActivityResult> {
 
 	private val activityForResultLauncher = activity.registerForActivityResult(
@@ -112,9 +119,44 @@ class DetailsMenuProvider(
 				activityForResultLauncher.launch(intent)
 			}
 
+			R.id.action_note -> {
+				showNoteDialog(manga)
+			}
+
 			else -> return false
 		}
 		return true
+	}
+
+	private fun showNoteDialog(manga: Manga) {
+		activity.lifecycleScope.launch {
+			val existing = mangaNotesDao.find(manga.id)
+			val view = LayoutInflater.from(activity).inflate(R.layout.dialog_manga_note, null)
+			val editNote = view.findViewById<EditText>(R.id.edit_note)
+			val ratingBar = view.findViewById<RatingBar>(R.id.rating_bar)
+			editNote.setText(existing?.note.orEmpty())
+			ratingBar.rating = existing?.rating ?: 0f
+			buildAlertDialog(activity) {
+				setTitle(R.string.personal_note)
+				setView(view)
+				setPositiveButton(R.string.save) { _, _ ->
+					activity.lifecycleScope.launch {
+						mangaNotesDao.upsert(
+							MangaNoteEntity(
+								mangaId = manga.id,
+								note = editNote.text?.toString().orEmpty(),
+								rating = ratingBar.rating,
+								updatedAt = System.currentTimeMillis(),
+							),
+						)
+					}
+				}
+				setNeutralButton(R.string.clear) { _, _ ->
+					activity.lifecycleScope.launch { mangaNotesDao.delete(manga.id) }
+				}
+				setNegativeButton(android.R.string.cancel, null)
+			}.show()
+		}
 	}
 
 	override fun onActivityResult(result: ActivityResult) {

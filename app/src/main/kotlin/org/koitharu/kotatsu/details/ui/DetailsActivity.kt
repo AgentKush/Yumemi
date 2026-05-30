@@ -32,6 +32,7 @@ import coil3.transform.RoundedCornersTransformation
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.chip.Chip
 import dagger.hilt.android.AndroidEntryPoint
+import org.koitharu.kotatsu.core.db.MangaDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.combine
@@ -131,6 +132,9 @@ class DetailsActivity :
 	@Inject
 	lateinit var settings: AppSettings
 
+	@Inject
+	lateinit var database: MangaDatabase
+
 	private val viewModel: DetailsViewModel by viewModels()
 	private lateinit var menuProvider: DetailsMenuProvider
 	private lateinit var infoBinding: LayoutDetailsTableBinding
@@ -202,6 +206,7 @@ class DetailsActivity :
 			viewModel = viewModel,
 			snackbarHost = viewBinding.scrollView,
 			appShortcutManager = shortcutManager,
+			mangaNotesDao = database.getMangaNotesDao(),
 		)
 		addMenuProvider(menuProvider)
 	}

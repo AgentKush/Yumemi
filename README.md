@@ -9,9 +9,10 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/AgentKush/Yumemi/actions/workflows/build.yml"><img src="https://github.com/AgentKush/Yumemi/actions/workflows/build.yml/badge.svg" alt="Build Status"/></a>
   <a href="https://github.com/AgentKush/Yumemi/releases"><img src="https://img.shields.io/github/v/release/AgentKush/Yumemi?style=flat-square" alt="Release"/></a>
   <a href="https://github.com/AgentKush/Yumemi/blob/devel/LICENSE"><img src="https://img.shields.io/github/license/AgentKush/Yumemi?style=flat-square" alt="License: GPL-3.0"/></a>
-  <img src="https://img.shields.io/badge/Android-7.0%2B-brightgreen?style=flat-square" alt="Android 7.0+"/>
+  <img src="https://img.shields.io/badge/Android-6.0%2B-brightgreen?style=flat-square" alt="Android 6.0+"/>
   <img src="https://img.shields.io/badge/Kotlin-2.2-blue?style=flat-square" alt="Kotlin"/>
 </p>
 
@@ -83,6 +84,10 @@ cd Yumemi
 - Debug: `app/build/outputs/apk/debug/app-debug.apk`
 - Release: `app/build/outputs/apk/release/app-release.apk`
 - Nightly: `app/build/outputs/apk/nightly/app-nightly.apk`
+
+### Continuous Integration
+
+Every push to `devel` and every pull request triggers a [GitHub Actions build](https://github.com/AgentKush/Yumemi/actions/workflows/build.yml) that compiles a signed release APK and uploads it as a downloadable artifact. Stable builds are published on the [Releases](https://github.com/AgentKush/Yumemi/releases) page.
 
 ## Tech Stack
 

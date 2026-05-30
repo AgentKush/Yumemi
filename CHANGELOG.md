@@ -6,8 +6,22 @@ A comprehensive list of all changes, improvements, and fixes made to the Yumemi 
 
 ---
 
+## Latest Release
+
+### v9.4.5 — Parser update & build pipeline
+*Commits: 08a094e, 8a492fb, 6d13d5d | Date: 2026-05-30*
+
+- **Updated kotatsu-parsers to 1.2.5** — restores manga sources that had stopped loading with the previously pinned parser commit (`b5b4d2cd43`).
+- **Fixed the release (R8) build** — added `-dontwarn com.google.re2j.**` for jsoup's optional RE2/J dependency, which was failing the `minifyReleaseWithR8` step.
+- **Added continuous integration** — `.github/workflows/build.yml` builds a signed release APK on every push to `devel` and on pull requests, uploading it as a downloadable artifact.
+- **Repository hygiene** — added `.gitattributes` to enforce LF line endings (removing a spurious repo-wide CRLF diff) and repaired a truncated `gradle/libs.versions.toml`.
+- Bumped version to **9.4.5** (versionCode 1037).
+
+---
+
 ## Table of Contents
 
+- [Latest Release](#latest-release)
 - [Major Features](#major-features)
 - [Performance Optimizations](#performance-optimizations)
 - [Network & Connectivity](#network--connectivity)

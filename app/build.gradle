@@ -21,8 +21,8 @@ android {
 		applicationId 'org.koitharu.kotatsu'
 		minSdk = 23
 		targetSdk = 36
-		versionCode = 1037
-		versionName = '9.4.5'
+		versionCode = 1038
+		versionName = '9.4.6'
 		generatedDensities = []
 		testInstrumentationRunner 'org.koitharu.kotatsu.HiltTestRunner'
 		ksp {
@@ -40,6 +40,16 @@ android {
 		resValue 'string', 'tg_backup_bot_token', localProperties.getProperty('tg_backup_bot_token', '')
 	}
 	signingConfigs {
+		// CI writes release.keystore from the KEYSTORE_BASE64 secret; KEYSTORE_PASSWORD via env.
+		// Local builds without the keystore fall back to debug signing.
+		if (rootProject.file('release.keystore').exists()) {
+			create('release') {
+				storeFile rootProject.file('release.keystore')
+				storePassword System.getenv('KEYSTORE_PASSWORD')
+				keyAlias 'yumemi'
+				keyPassword System.getenv('KEYSTORE_PASSWORD')
+			}
+		}
 //		Yukimi {
 //			storeFile file("")
 //			storePassword ""
@@ -56,8 +66,8 @@ android {
 			minifyEnabled true
 			shrinkResources true
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-			// Use debug signing for testing - replace with proper keystore for production
-			signingConfig signingConfigs.debug
+			// Sign with the release keystore (CI secret) when present, else debug for local testing
+			signingConfig rootProject.file('release.keystore').exists() ? signingConfigs.getByName('release') : signingConfigs.getByName('debug')
 		}
 		nightly {
 			initWith release

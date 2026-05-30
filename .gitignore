@@ -28,3 +28,8 @@
 /.idea/deviceManager.xml
 /.kotlin/
 /.idea/AndroidProjectSystem.xml
+
+# Signing keystores (provided to CI via secret; never commit)
+/release.keystore
+*.jks
+*.keystore

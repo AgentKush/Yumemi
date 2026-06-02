@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koitharu.kotatsu.BuildConfig
 import org.koitharu.kotatsu.core.model.getPreferredBranch
 import org.koitharu.kotatsu.core.model.isLocal
@@ -64,16 +65,21 @@ class CheckNewChaptersUseCase @Inject constructor(
 		for (track in tracks) {
 			launch {
 				semaphore.withPermit {
-					val result = runCatchingCancellable {
-						mutex.withLock(track.manga.id) {
-							invokeImpl(track)
+					val result = withTimeoutOrNull(MANGA_CHECK_TIMEOUT_MS) {
+						runCatchingCancellable {
+							mutex.withLock(track.manga.id) {
+								invokeImpl(track)
+							}
+						}.getOrElse { error ->
+							MangaUpdates.Failure(
+								manga = track.manga,
+								error = error,
+							)
 						}
-					}.getOrElse { error ->
-						MangaUpdates.Failure(
-							manga = track.manga,
-							error = error,
-						)
-					}
+					} ?: MangaUpdates.Failure(
+						manga = track.manga,
+						error = null,
+					)
 					send(result)
 				}
 			}
@@ -189,5 +195,6 @@ class CheckNewChaptersUseCase @Inject constructor(
 	companion object {
 		const val DEFAULT_PARALLELISM = 6
 		const val MAX_PARALLELISM = 12
+		const val MANGA_CHECK_TIMEOUT_MS = 45_000L
 	}
 }

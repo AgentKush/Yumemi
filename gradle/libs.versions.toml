@@ -35,8 +35,8 @@ material = "1.14.0-alpha05"
 moshi = "1.15.2"
 okhttp = "5.2.1"
 okio = "3.16.1"
-# YakaTeam/kotatsu-parsers - pinned to latest stable release (verified built on JitPack)
-parsers = "1.2.5"
+# YakaTeam/kotatsu-parsers - pinned to latest master commit b3423bc69b (JitPack build verified)
+parsers = "b3423bc69b"
 preference = "1.2.1"
 recyclerview = "1.4.0"
 room = "2.7.2"

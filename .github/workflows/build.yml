@@ -69,6 +69,19 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Prepare release notes
+        # Use the annotated tag message as the changelog (SSH signature stripped) so the
+        # in-app updater shows real notes instead of an auto-generated compare link.
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          git fetch --force origin "refs/tags/${{ github.ref_name }}:refs/tags/${{ github.ref_name }}" 2>/dev/null || true
+          git for-each-ref "refs/tags/${{ github.ref_name }}" --format='%(contents)' \
+            | sed '/-----BEGIN SSH SIGNATURE-----/,/-----END SSH SIGNATURE-----/d' \
+            | sed -e 's/[[:space:]]*$//' > release_body.md
+          if [ ! -s release_body.md ]; then echo "${{ github.ref_name }}" > release_body.md; fi
+          echo '----- release_body.md -----'
+          cat release_body.md
+
       - name: Publish GitHub Release
         # Runs only when a v* tag is pushed. Publishes a Release named after the tag
         # (e.g. v9.4.6) with the signed APK attached, so the in-app updater can find it.
@@ -78,5 +91,6 @@ jobs:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           files: app/build/outputs/apk/release/*.apk
-          generate_release_notes: true
+          body_path: release_body.md
+          generate_release_notes: false
           fail_on_unmatched_files: true

@@ -43,7 +43,7 @@ class WebViewExecutor @Inject constructor(
 
 	val defaultUserAgent: String? by lazy {
 		try {
-			WebSettings.getDefaultUserAgent(context)
+			WebSettings.getDefaultUserAgent(context).stripWebViewMarkers()
 		} catch (e: AndroidRuntimeException) {
 			e.printStackTraceDebug()
 			// Probably WebView is not available
@@ -132,3 +132,16 @@ class WebViewExecutor @Inject constructor(
 		clearHistory()
 	}
 }
+
+/**
+ * Strip Android WebView markers ("; wv" and "Version/x.x") from the User-Agent so that
+ * bot-protection (Cloudflare Turnstile, etc.) treats requests as regular mobile Chrome rather
+ * than an in-app WebView. Applied at the single source of the default UA so the browser, the
+ * background captcha solver and the OkHttp client all stay in sync — a UA mismatch would
+ * invalidate the cf_clearance cookie.
+ */
+private fun String.stripWebViewMarkers(): String = this
+	.replace("; wv)", ")")
+	.replace(Regex("""Version/[\d.]+\s"""), "")
+	.replace(Regex("""\s{2,}"""), " ")
+	.trim()

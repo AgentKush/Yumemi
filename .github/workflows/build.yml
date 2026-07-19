@@ -76,7 +76,7 @@ jobs:
         run: |
           git fetch --force origin "refs/tags/${{ github.ref_name }}:refs/tags/${{ github.ref_name }}" 2>/dev/null || true
           git for-each-ref "refs/tags/${{ github.ref_name }}" --format='%(contents)' \
-            | sed '/-----BEGIN SSH SIGNATURE-----/,/-----END SSH SIGNATURE-----/d' \
+            | awk '{ i=index($0,"-----BEGIN SSH SIGNATURE-----"); if(i>0){ s=substr($0,1,i-1); if(s!="") print s; exit } print }' \
             | sed -e 's/[[:space:]]*$//' > release_body.md
           if [ ! -s release_body.md ]; then echo "${{ github.ref_name }}" > release_body.md; fi
           echo '----- release_body.md -----'

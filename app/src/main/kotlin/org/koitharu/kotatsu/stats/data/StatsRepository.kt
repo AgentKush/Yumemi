@@ -83,14 +83,13 @@ class StatsRepository @Inject constructor(
 		val dao = db.getStatsDao()
 		val startOfToday = startOfDay(System.currentTimeMillis())
 		val todayMs = dao.getTotalDurationSince(startOfToday)
-		val oneDay = TimeUnit.DAYS.toMillis(1)
 		val days = HashSet<Long>()
 		for (t in dao.getStartTimesSince(startOfToday - TimeUnit.DAYS.toMillis(400))) {
 			days.add(startOfDay(t))
 		}
 		var cursor = startOfToday
 		if (cursor !in days) {
-			cursor = startOfDay(cursor - oneDay)
+			cursor = previousDayStart(cursor)
 			if (cursor !in days) {
 				return ReadingStreak(0, todayMs, settings.statsDailyGoalMinutes)
 			}
@@ -98,9 +97,18 @@ class StatsRepository @Inject constructor(
 		var streak = 0
 		while (cursor in days) {
 			streak++
-			cursor = startOfDay(cursor - oneDay)
+			cursor = previousDayStart(cursor)
 		}
 		return ReadingStreak(streak, todayMs, settings.statsDailyGoalMinutes)
+	}
+
+	// Decrement by one calendar day (DST-safe) rather than subtracting a fixed 24h,
+	// which would skip a day across a spring-forward boundary and under-count the streak.
+	private fun previousDayStart(startOfDayTs: Long): Long {
+		val cal = Calendar.getInstance()
+		cal.timeInMillis = startOfDayTs
+		cal.add(Calendar.DAY_OF_YEAR, -1)
+		return startOfDay(cal.timeInMillis)
 	}
 
 	private fun startOfDay(ts: Long): Long {

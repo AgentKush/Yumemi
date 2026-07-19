@@ -90,6 +90,7 @@ class StatsActivity : BaseActivity<ActivityStatsBinding>(),
 		}
 
 		viewModel.readingStreak.observe(this) { streak ->
+			viewBinding.cardStreak?.isVisible = streak != null && (streak.currentStreak > 0 || streak.todayDurationMs > 0L)
 			streak ?: return@observe
 			viewBinding.textViewStreak?.text =
 				resources.getQuantityString(R.plurals.reading_streak_days, streak.currentStreak, streak.currentStreak)
@@ -177,7 +178,6 @@ class StatsActivity : BaseActivity<ActivityStatsBinding>(),
 			chart.isGone = isEmpty
 			recyclerView.isGone = isEmpty
 			stubEmpty.isVisible = isEmpty
-			cardStreak?.isGone = isEmpty
 		}
 	}
 

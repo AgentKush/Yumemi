@@ -931,4 +931,6 @@
     <string name="download_default_directory">Default directory for downloading manga</string>
     <string name="private_app_directory_warning">This directory with all data will be deleted if you uninstall the application</string>
     <string name="available_pattern">%1$s available</string>
+    <string name="reading_reminder_time">Reminder time</string>
+    <string name="reading_daily_goal">Daily reading goal (minutes)</string>
 </resources>

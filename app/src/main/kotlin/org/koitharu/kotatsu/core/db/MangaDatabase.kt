@@ -51,7 +51,6 @@ import org.koitharu.kotatsu.core.db.migrations.Migration27To28
 import org.koitharu.kotatsu.core.db.migrations.Migration28To29
 import org.koitharu.kotatsu.core.db.migrations.Migration29To30
 import org.koitharu.kotatsu.core.db.migrations.Migration30To31
-import org.koitharu.kotatsu.core.db.migrations.OptimizationIndexCallback
 import org.koitharu.kotatsu.core.db.migrations.Migration2To3
 import org.koitharu.kotatsu.core.db.migrations.Migration3To4
 import org.koitharu.kotatsu.core.db.migrations.Migration4To5
@@ -165,7 +164,6 @@ fun MangaDatabase(context: Context): MangaDatabase = Room
 	.databaseBuilder(context, MangaDatabase::class.java, "kotatsu-db")
 	.addMigrations(*getDatabaseMigrations(context))
 	.addCallback(DatabasePrePopulateCallback(context.resources))
-	.addCallback(OptimizationIndexCallback)
 	.fallbackToDestructiveMigration(dropAllTables = true)
 	.build()
 

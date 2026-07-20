@@ -1,0 +1,75 @@
+name: Auto-update parsers
+
+# Daily check of YakaTeam/kotatsu-parsers master. If there is a newer commit that JitPack can build,
+# re-pin the parsers, bump the version, and tag a release. The tag runs the existing pipeline
+# (migration test gate -> build -> publish), and the fix reaches the app via the in-app updater.
+# Manual run: Actions -> "Auto-update parsers" -> Run workflow.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-parsers
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Check for parser updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout devel
+        uses: actions/checkout@v4
+        with:
+          ref: devel
+          token: ${{ secrets.RELEASE_PAT }}
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name 'yumemi-auto'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Re-pin parsers and tag a release if newer
+        run: |
+          set -eo pipefail
+          CUR=$(grep -E '^parsers = ' gradle/libs.versions.toml | sed -E 's/.*"(.*)".*/\1/')
+          LATEST=$(curl -fsSL 'https://api.github.com/repos/YakaTeam/kotatsu-parsers/commits/master' -H 'Accept: application/vnd.github.sha' | cut -c1-10)
+          echo "Current pin: $CUR | latest master: $LATEST"
+          if [ -z "$LATEST" ]; then echo 'Could not read latest commit; skipping.'; exit 0; fi
+          if [ "$LATEST" = "$CUR" ]; then echo 'Already on the latest parsers; nothing to do.'; exit 0; fi
+
+          echo "Newer parsers commit found ($LATEST). Ensuring JitPack can build it..."
+          curl -fsSL "https://jitpack.io/com/github/YakaTeam/kotatsu-parsers/$LATEST/kotatsu-parsers-$LATEST.pom" -o /dev/null || true
+          STATUS=''
+          for i in $(seq 1 45); do
+            STATUS=$(curl -fsSL "https://jitpack.io/api/builds/com.github.YakaTeam/kotatsu-parsers/$LATEST" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("status",""))' 2>/dev/null || true)
+            echo "  JitPack status: ${STATUS:-pending}"
+            if [ "$STATUS" = 'ok' ]; then break; fi
+            if [ "$STATUS" = 'error' ]; then echo 'JitPack build failed for this commit; will retry next run.'; exit 0; fi
+            sleep 20
+          done
+          if [ "$STATUS" != 'ok' ]; then echo 'JitPack not ready yet; will retry next run.'; exit 0; fi
+
+          sed -i -E "s/^parsers = \".*\"/parsers = \"$LATEST\"/" gradle/libs.versions.toml
+
+          NAME=$(grep -E "versionName = '" app/build.gradle | sed -E "s/.*'([0-9.]+)'.*/\1/")
+          CODE=$(grep -E 'versionCode = ' app/build.gradle | sed -E 's/.*versionCode = ([0-9]+).*/\1/')
+          NEWNAME=$(echo "$NAME" | awk -F. -v OFS=. '{$NF=$NF+1; print}')
+          NEWCODE=$((CODE + 1))
+          sed -i -E "s/versionName = '$NAME'/versionName = '$NEWNAME'/" app/build.gradle
+          sed -i -E "s/versionCode = $CODE/versionCode = $NEWCODE/" app/build.gradle
+          echo "Version $NAME ($CODE) -> $NEWNAME ($NEWCODE); parsers -> $LATEST"
+
+          git add gradle/libs.versions.toml app/build.gradle
+          git commit -m "Auto: update parsers to $LATEST (release v$NEWNAME)"
+          git push origin HEAD:devel
+
+          printf 'Yumemi v%s\n\nImproved\n- Updated manga sources (parsers) to the latest upstream fixes.\n' "$NEWNAME" > "$RUNNER_TEMP/notes.txt"
+          git tag -a "v$NEWNAME" --cleanup=verbatim -F "$RUNNER_TEMP/notes.txt"
+          git push origin "refs/tags/v$NEWNAME"
+          echo "Tagged v$NEWNAME; the release build will run the gate, build, and publish."

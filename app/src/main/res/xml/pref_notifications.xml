@@ -43,22 +43,4 @@
 		android:title="@string/reading_reminders"
 		app:allowDividerAbove="true" />
 
-
-	<ListPreference
-		android:defaultValue="20"
-		android:dependency="reading_reminder"
-		android:entries="@array/reading_reminder_hours"
-		android:entryValues="@array/reading_reminder_hour_values"
-		android:key="reading_reminder_hour"
-		android:title="@string/reading_reminder_time"
-		app:useSimpleSummaryProvider="true" />
-
-	<SeekBarPreference
-		android:defaultValue="20"
-		android:key="stats_daily_goal"
-		android:max="180"
-		android:title="@string/reading_daily_goal"
-		app:min="5"
-		app:showSeekBarValue="true" />
-
 </PreferenceScreen>

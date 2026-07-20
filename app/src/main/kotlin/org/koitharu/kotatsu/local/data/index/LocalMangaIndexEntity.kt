@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.local.data.index
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import org.koitharu.kotatsu.core.db.entity.MangaEntity
@@ -16,6 +17,7 @@ import org.koitharu.kotatsu.core.db.entity.MangaEntity
 			onDelete = ForeignKey.CASCADE,
 		),
 	],
+	indices = [Index(value = ["manga_id"])],
 )
 class LocalMangaIndexEntity(
 	@PrimaryKey(autoGenerate = false)

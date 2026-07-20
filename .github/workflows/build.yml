@@ -46,7 +46,14 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.koitharu.kotatsu.core.db.MangaDatabaseTest#prePopulate
+          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.koitharu.kotatsu.core.db.MangaDatabaseTest#migrate30To31
+      - name: Upload generated Room schemas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: room-schemas-generated
+          path: app/schemas
+          if-no-files-found: warn
 
   build:
     name: Build release APK

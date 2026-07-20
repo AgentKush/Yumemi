@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.core.db.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import org.koitharu.kotatsu.core.db.TABLE_SOURCE_HEALTH
 
@@ -9,7 +10,10 @@ import org.koitharu.kotatsu.core.db.TABLE_SOURCE_HEALTH
  * Entity for tracking source health metrics.
  * Records success/failure counts, response times, and reliability scores.
  */
-@Entity(tableName = TABLE_SOURCE_HEALTH)
+@Entity(
+	tableName = TABLE_SOURCE_HEALTH,
+	indices = [Index(value = ["consecutive_failures"])],
+)
 data class SourceHealthEntity(
 	@PrimaryKey(autoGenerate = false)
 	@ColumnInfo(name = "source")

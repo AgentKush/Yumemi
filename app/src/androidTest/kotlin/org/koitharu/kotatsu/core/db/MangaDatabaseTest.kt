@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.core.db
 
 import androidx.room.testing.MigrationTestHelper
+import org.koitharu.kotatsu.core.db.migrations.Migration30To31
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
@@ -48,6 +49,12 @@ class MangaDatabaseTest {
 		helper.createDatabase(TEST_DB, DATABASE_VERSION).use {
 			DatabasePrePopulateCallback(resources).onCreate(it)
 		}
+	}
+
+	@Test
+	fun migrate30To31() {
+		helper.createDatabase(TEST_DB, 30).close()
+		helper.runMigrationsAndValidate(TEST_DB, 31, true, Migration30To31()).close()
 	}
 
 	private companion object {

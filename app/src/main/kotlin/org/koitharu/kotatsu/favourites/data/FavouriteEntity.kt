@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.favourites.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.ForeignKey
 import org.koitharu.kotatsu.core.db.TABLE_FAVOURITES
 import org.koitharu.kotatsu.core.db.entity.MangaEntity
@@ -22,7 +23,8 @@ import org.koitharu.kotatsu.core.db.entity.MangaEntity
 			childColumns = ["category_id"],
 			onDelete = ForeignKey.CASCADE
 		)
-	]
+	],
+	indices = [Index(value = ["deleted_at", "created_at"])],
 )
 data class FavouriteEntity(
 	@ColumnInfo(name = "manga_id", index = true) val mangaId: Long,

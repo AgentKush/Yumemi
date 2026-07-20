@@ -2,10 +2,12 @@ package org.koitharu.kotatsu.scrobbling.common.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 
 @Entity(
 	tableName = "scrobblings",
 	primaryKeys = ["scrobbler", "id", "manga_id"],
+	indices = [Index(value = ["manga_id"])],
 )
 class ScrobblingEntity(
 	@ColumnInfo(name = "scrobbler") val scrobbler: Int,

@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.tracker.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import org.koitharu.kotatsu.core.db.entity.MangaEntity
@@ -16,6 +17,7 @@ import org.koitharu.kotatsu.core.db.entity.MangaEntity
 			onDelete = ForeignKey.CASCADE,
 		),
 	],
+	indices = [Index(value = ["created_at"])],
 )
 class TrackLogEntity(
 	@PrimaryKey(autoGenerate = true)

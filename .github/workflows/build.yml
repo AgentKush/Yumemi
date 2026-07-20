@@ -69,6 +69,13 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Upload Room schemas
+        uses: actions/upload-artifact@v4
+        with:
+          name: room-schemas
+          path: app/schemas
+          if-no-files-found: warn
+
       - name: Prepare release notes
         # Use the annotated tag message as the changelog (SSH signature stripped) so the
         # in-app updater shows real notes instead of an auto-generated compare link.

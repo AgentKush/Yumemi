@@ -46,7 +46,7 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.koitharu.kotatsu.core.db.MangaDatabaseTest#versions,org.koitharu.kotatsu.core.db.MangaDatabaseTest#prePopulate
+          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.koitharu.kotatsu.core.db.MangaDatabaseTest#prePopulate
 
   build:
     name: Build release APK

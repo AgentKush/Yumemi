@@ -8,9 +8,9 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.ViewTreeObserver.OnPreDrawListener
 import androidx.annotation.AttrRes
+import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
-import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toDrawable
 import coil3.network.HttpException
 import coil3.request.ErrorResult
@@ -29,7 +29,6 @@ import org.koitharu.kotatsu.core.exceptions.CloudFlareProtectedException
 import org.koitharu.kotatsu.core.exceptions.UnsupportedSourceException
 import org.koitharu.kotatsu.core.image.CoilImageView
 import org.koitharu.kotatsu.core.ui.image.AnimatedPlaceholderDrawable
-import org.koitharu.kotatsu.core.ui.image.TextDrawable
 import org.koitharu.kotatsu.core.ui.image.TrimTransformation
 import org.koitharu.kotatsu.core.util.ext.bookmarkExtra
 import org.koitharu.kotatsu.core.util.ext.decodeRegion
@@ -46,7 +45,6 @@ import org.koitharu.kotatsu.parsers.model.MangaPage
 import org.koitharu.kotatsu.parsers.model.MangaSource
 import org.koitharu.kotatsu.reader.ui.pager.ReaderPage
 import kotlin.coroutines.resume
-import androidx.appcompat.R as appcompatR
 import com.google.android.material.R as materialR
 
 class CoverImageView @JvmOverloads constructor(
@@ -72,11 +70,7 @@ class CoverImageView @JvmOverloads constructor(
 			placeholderDrawable = AnimatedPlaceholderDrawable(context)
 		}
 		if (errorDrawable == null) {
-			errorDrawable = ColorUtils.blendARGB(
-				context.getThemeColor(materialR.attr.colorErrorContainer),
-				context.getThemeColor(appcompatR.attr.colorBackgroundFloating),
-				0.25f,
-			).toDrawable()
+			errorDrawable = context.getThemeColor(materialR.attr.colorSurfaceContainer).toDrawable()
 		}
 		if (fallbackDrawable == null) {
 			fallbackDrawable = context.getThemeColor(materialR.attr.colorSurfaceContainer).toDrawable()
@@ -184,19 +178,20 @@ class CoverImageView @JvmOverloads constructor(
 
 		override fun onError(request: ImageRequest, result: ErrorResult) {
 			super.onError(request, result)
-			foreground = if (result.throwable.isNetworkError() && !networkState.isOnline()) {
-				ContextCompat.getDrawable(context, R.drawable.ic_offline)?.let {
-					LayerDrawable(arrayOf(it)).apply {
-						setLayerGravity(0, Gravity.CENTER)
-						setTint(ContextCompat.getColor(context, R.color.dim_lite))
-					}
-				}
-			} else {
-				result.throwable.getShortMessage()?.let { text ->
-					TextDrawable.create(context, text, materialR.attr.textAppearanceTitleSmall)
-				}
+			foreground = when {
+				result.throwable.isNetworkError() && !networkState.isOnline() -> createErrorForeground(R.drawable.ic_offline)
+				result.throwable.getShortMessage() != null -> createErrorForeground(R.drawable.ic_placeholder)
+				else -> null
 			}
 		}
+
+		private fun createErrorForeground(@DrawableRes iconResId: Int) =
+			ContextCompat.getDrawable(context, iconResId)?.let {
+				LayerDrawable(arrayOf(it)).apply {
+					setLayerGravity(0, Gravity.CENTER)
+					setTint(ContextCompat.getColor(context, R.color.dim_lite))
+				}
+			}
 
 		private fun Throwable.getShortMessage(): String? = when (this) {
 			is HttpException -> response.code.toString()

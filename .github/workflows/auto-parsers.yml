@@ -1,6 +1,6 @@
 name: Auto-update parsers
 
-# Daily check of YakaTeam/kotatsu-parsers master. If there is a newer commit that JitPack can build,
+# Daily check of Gekkoushi/plugin-sources master. If there is a newer commit that JitPack can build,
 # re-pin the parsers, bump the version, and tag a release. The tag runs the existing pipeline
 # (migration test gate -> build -> publish), and the fix reaches the app via the in-app updater.
 # Manual run: Actions -> "Auto-update parsers" -> Run workflow.
@@ -38,16 +38,16 @@ jobs:
         run: |
           set -eo pipefail
           CUR=$(grep -E '^parsers = ' gradle/libs.versions.toml | sed -E 's/.*"(.*)".*/\1/')
-          LATEST=$(curl -fsSL 'https://api.github.com/repos/YakaTeam/kotatsu-parsers/commits/master' -H 'Accept: application/vnd.github.sha' | cut -c1-10)
+          LATEST=$(curl -fsSL 'https://api.github.com/repos/Gekkoushi/plugin-sources/commits/master' -H 'Accept: application/vnd.github.sha' | cut -c1-10)
           echo "Current pin: $CUR | latest master: $LATEST"
           if [ -z "$LATEST" ]; then echo 'Could not read latest commit; skipping.'; exit 0; fi
           if [ "$LATEST" = "$CUR" ]; then echo 'Already on the latest parsers; nothing to do.'; exit 0; fi
 
           echo "Newer parsers commit found ($LATEST). Ensuring JitPack can build it..."
-          curl -fsSL "https://jitpack.io/com/github/YakaTeam/kotatsu-parsers/$LATEST/kotatsu-parsers-$LATEST.pom" -o /dev/null || true
+          curl -fsSL "https://jitpack.io/com/github/Gekkoushi/plugin-sources/$LATEST/plugin-sources-$LATEST.pom" -o /dev/null || true
           STATUS=''
           for i in $(seq 1 45); do
-            STATUS=$(curl -fsSL "https://jitpack.io/api/builds/com.github.YakaTeam/kotatsu-parsers/$LATEST" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("status",""))' 2>/dev/null || true)
+            STATUS=$(curl -fsSL "https://jitpack.io/api/builds/com.github.Gekkoushi/plugin-sources/$LATEST" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("status",""))' 2>/dev/null || true)
             echo "  JitPack status: ${STATUS:-pending}"
             if [ "$STATUS" = 'ok' ]; then break; fi
             if [ "$STATUS" = 'error' ]; then echo 'JitPack build failed for this commit; will retry next run.'; exit 0; fi

@@ -36,7 +36,7 @@ moshi = "1.15.2"
 okhttp = "5.2.1"
 okio = "3.16.1"
 # Gekkoushi/plugin-sources - pinned to master commit b9802a2b16 (JitPack build verified)
-parsers = "b9802a2b16"
+parsers = "677d824ff3"
 preference = "1.2.1"
 recyclerview = "1.4.0"
 room = "2.7.2"

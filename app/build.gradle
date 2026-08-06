@@ -21,8 +21,8 @@ android {
 		applicationId 'org.koitharu.kotatsu'
 		minSdk = 23
 		targetSdk = 36
-		versionCode = 1050
-		versionName = '9.4.18'
+		versionCode = 1051
+		versionName = '9.4.19'
 		generatedDensities = []
 		testInstrumentationRunner 'org.koitharu.kotatsu.HiltTestRunner'
 		ksp {
